@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -74,13 +75,7 @@ export default function ChildDetailsScreen() {
   if (!child) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <ThemedText style={styles.title}>Child Details</ThemedText>
-          <View style={{ width: 24 }} />
-        </View>
+        <HeaderWithBack title="Child Details" />
         <View style={styles.centerContent}>
           <ThemedText>Loading child details...</ThemedText>
         </View>
@@ -90,13 +85,7 @@ export default function ChildDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText style={styles.title}>{child.name}</ThemedText>
-        <View style={{ width: 24 }} />
-      </View>
+      <HeaderWithBack title={child.name} />
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Child Card Header */}
@@ -236,34 +225,17 @@ export default function ChildDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: BRAND_COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    padding: 16,
   },
   customizeCard: {
     flexDirection: 'row',
