@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, FlatList, Modal, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 
@@ -18,6 +18,9 @@ const initialChildren = [
     id: '1',
     name: 'Emma Smith',
     age: 15,
+    email: 'emma.smith@example.com',
+    phone: '555-123-4567',
+    school: 'Lincoln High School',
     balance: 120.50,
     avatar: 'girl',
     isActive: true,
@@ -26,6 +29,9 @@ const initialChildren = [
     id: '2',
     name: 'Noah Smith',
     age: 13,
+    email: 'noah.smith@example.com',
+    phone: '555-987-6543',
+    school: 'Washington Middle School',
     balance: 75.25,
     avatar: 'boy',
     isActive: true,
@@ -38,18 +44,63 @@ export default function FamilyScreen() {
   const [transferModalVisible, setTransferModalVisible] = useState(false);
   const [newChildName, setNewChildName] = useState('');
   const [newChildAge, setNewChildAge] = useState('');
+  const [newChildEmail, setNewChildEmail] = useState('');
+  const [newChildPhone, setNewChildPhone] = useState('');
+  const [newChildSchool, setNewChildSchool] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('girl');
   const [transferAmount, setTransferAmount] = useState('');
   const [selectedChildId, setSelectedChildId] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const addChild = () => {
-    if (!newChildName.trim() || !newChildAge.trim()) {
-      Alert.alert('Error', 'Please enter both name and age');
-      return;
+  const resetAddChildForm = () => {
+    setNewChildName('');
+    setNewChildAge('');
+    setNewChildEmail('');
+    setNewChildPhone('');
+    setNewChildSchool('');
+    setSelectedAvatar('girl');
+    setCurrentStep(1);
+  };
+
+  const closeAddChildModal = () => {
+    setModalVisible(false);
+    resetAddChildForm();
+  };
+
+  const validateStep1 = () => {
+    if (!newChildName.trim()) {
+      Alert.alert('Missing Information', 'Please enter your child\'s name');
+      return false;
     }
-
+    
+    if (!newChildAge.trim()) {
+      Alert.alert('Missing Information', 'Please enter your child\'s age');
+      return false;
+    }
+    
     const age = parseInt(newChildAge);
     if (isNaN(age) || age < 12 || age > 17) {
-      Alert.alert('Error', 'Please enter a valid age (12-17)');
+      Alert.alert('Invalid Age', 'Please enter a valid age between 12-17');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const goToNextStep = () => {
+    if (currentStep === 1 && validateStep1()) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      addChild();
+    }
+  };
+
+  const addChild = () => {
+    const age = parseInt(newChildAge);
+    
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (newChildEmail.trim() && !emailPattern.test(newChildEmail)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
@@ -57,15 +108,21 @@ export default function FamilyScreen() {
       id: Date.now().toString(),
       name: newChildName.trim(),
       age: age,
+      email: newChildEmail.trim(),
+      phone: newChildPhone.trim(),
+      school: newChildSchool.trim(),
       balance: 0,
-      avatar: Math.random() > 0.5 ? 'girl' : 'boy',
+      avatar: selectedAvatar,
       isActive: false,
     };
 
     setChildren([...children, newChild]);
-    setModalVisible(false);
-    setNewChildName('');
-    setNewChildAge('');
+    closeAddChildModal();
+    Alert.alert(
+      'Child Added Successfully', 
+      'Transfer money to activate your child\'s account.',
+      [{ text: 'OK' }]
+    );
   };
 
   const removeChild = (id: string) => {
@@ -145,6 +202,7 @@ export default function FamilyScreen() {
             </View>
           </View>
           <ThemedText style={styles.childAge}>{item.age} years old</ThemedText>
+          {item.school ? <ThemedText style={styles.childSchool}>{item.school}</ThemedText> : null}
         </View>
       </View>
       
@@ -174,6 +232,18 @@ export default function FamilyScreen() {
       >
         <Ionicons name="close-circle" size={22} color="#FF6B6B" />
       </TouchableOpacity>
+    </View>
+  );
+
+  const renderStepIndicator = () => (
+    <View style={styles.stepIndicatorContainer}>
+      <View style={[styles.stepIndicator, currentStep >= 1 ? styles.activeStep : {}]}>
+        <ThemedText style={[styles.stepNumber, currentStep >= 1 ? styles.activeStepNumber : {}]}>1</ThemedText>
+      </View>
+      <View style={styles.stepConnector} />
+      <View style={[styles.stepIndicator, currentStep >= 2 ? styles.activeStep : {}]}>
+        <ThemedText style={[styles.stepNumber, currentStep >= 2 ? styles.activeStepNumber : {}]}>2</ThemedText>
+      </View>
     </View>
   );
 
@@ -217,49 +287,139 @@ export default function FamilyScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeAddChildModal}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>Add Child</ThemedText>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <ThemedText style={styles.modalTitle}>
+                {currentStep === 1 ? 'Basic Information' : 'Additional Information'}
+              </ThemedText>
+              <TouchableOpacity onPress={closeAddChildModal}>
                 <Ionicons name="close" size={24} color="#000000" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalForm}>
-              <View style={styles.inputContainer}>
-                <ThemedText style={styles.label}>Child's Name</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter child's name"
-                  value={newChildName}
-                  onChangeText={setNewChildName}
-                />
-              </View>
+            {renderStepIndicator()}
 
-              <View style={styles.inputContainer}>
-                <ThemedText style={styles.label}>Child's Age (12-17)</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter age between 12-17"
-                  value={newChildAge}
-                  onChangeText={setNewChildAge}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                />
-              </View>
+            <ScrollView 
+              style={styles.modalScrollView}
+              showsVerticalScrollIndicator={false}
+            >
+              {currentStep === 1 ? (
+                <View style={styles.modalForm}>
+                  <View style={styles.inputContainer}>
+                    <ThemedText style={styles.label}>Child's Name*</ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter child's full name"
+                      value={newChildName}
+                      onChangeText={setNewChildName}
+                    />
+                  </View>
 
-              <ThemedText style={styles.noteText}>
-                Note: After adding a child, you'll need to transfer money to activate their account.
-              </ThemedText>
+                  <View style={styles.inputContainer}>
+                    <ThemedText style={styles.label}>Child's Age* (12-17)</ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter age between 12-17"
+                      value={newChildAge}
+                      onChangeText={setNewChildAge}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                    />
+                  </View>
 
+                  <View style={styles.avatarSelectionContainer}>
+                    <ThemedText style={styles.label}>Select Avatar</ThemedText>
+                    <View style={styles.avatarOptions}>
+                      <TouchableOpacity 
+                        style={[
+                          styles.avatarOption, 
+                          selectedAvatar === 'girl' && styles.selectedAvatarOption
+                        ]}
+                        onPress={() => setSelectedAvatar('girl')}
+                      >
+                        <View style={[styles.avatarPreview, { backgroundColor: '#FFC0CB' }]}>
+                          <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
+                        </View>
+                        <ThemedText style={styles.avatarLabel}>Girl</ThemedText>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        style={[
+                          styles.avatarOption,
+                          selectedAvatar === 'boy' && styles.selectedAvatarOption
+                        ]}
+                        onPress={() => setSelectedAvatar('boy')}
+                      >
+                        <View style={[styles.avatarPreview, { backgroundColor: '#ADD8E6' }]}>
+                          <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
+                        </View>
+                        <ThemedText style={styles.avatarLabel}>Boy</ThemedText>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.modalForm}>
+                  <View style={styles.inputContainer}>
+                    <ThemedText style={styles.label}>Email Address</ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter child's email (optional)"
+                      value={newChildEmail}
+                      onChangeText={setNewChildEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <ThemedText style={styles.label}>Phone Number</ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter child's phone (optional)"
+                      value={newChildPhone}
+                      onChangeText={setNewChildPhone}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <ThemedText style={styles.label}>School Name</ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter child's school (optional)"
+                      value={newChildSchool}
+                      onChangeText={setNewChildSchool}
+                    />
+                  </View>
+
+                  <ThemedText style={styles.noteText}>
+                    Note: After adding your child, you'll need to transfer money to activate their account.
+                  </ThemedText>
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              {currentStep === 2 && (
+                <TouchableOpacity 
+                  style={styles.backButton}
+                  onPress={() => setCurrentStep(1)}
+                >
+                  <ThemedText style={styles.backButtonText}>Back</ThemedText>
+                </TouchableOpacity>
+              )}
+              
               <TouchableOpacity 
-                style={styles.addChildButtonModal}
-                onPress={addChild}
+                style={[styles.addChildButtonModal, styles.nextButton]}
+                onPress={goToNextStep}
               >
-                <ThemedText style={styles.addChildButtonText}>Add Child</ThemedText>
+                <ThemedText style={styles.addChildButtonText}>
+                  {currentStep === 1 ? 'Next' : 'Add Child'}
+                </ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -401,6 +561,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777777',
   },
+  childSchool: {
+    fontSize: 14,
+    color: '#777777',
+    marginTop: 2,
+  },
   balanceSection: {
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
@@ -479,21 +644,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
   },
+  stepIndicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  stepIndicator: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#DDDDDD',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeStep: {
+    borderColor: BRAND_COLORS.secondary,
+    backgroundColor: BRAND_COLORS.secondary,
+  },
+  stepNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#AAAAAA',
+  },
+  activeStepNumber: {
+    color: '#FFFFFF',
+  },
+  stepConnector: {
+    height: 2,
+    width: 60,
+    backgroundColor: '#DDDDDD',
+    marginHorizontal: 8,
+  },
+  modalScrollView: {
+    maxHeight: 400,
+  },
   modalForm: {
-    paddingBottom: 20,
+    padding: 16,
   },
   inputContainer: {
     marginBottom: 20,
@@ -510,17 +713,72 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
   },
+  avatarSelectionContainer: {
+    marginBottom: 20,
+  },
+  avatarOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  avatarOption: {
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedAvatarOption: {
+    borderColor: BRAND_COLORS.secondary,
+    backgroundColor: 'rgba(0, 78, 158, 0.05)',
+  },
+  avatarPreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  avatarLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   noteText: {
     fontSize: 14,
     color: '#777777',
     marginBottom: 20,
     fontStyle: 'italic',
   },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    padding: 16,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: 14,
+    marginRight: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+  },
+  backButtonText: {
+    color: '#555555',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  nextButton: {
+    flex: 2,
+  },
   addChildButtonModal: {
     backgroundColor: BRAND_COLORS.secondary,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
+    flex: 1,
   },
   addChildButtonText: {
     color: '#FFFFFF',
