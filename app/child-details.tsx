@@ -181,41 +181,36 @@ export default function ChildDetailsScreen() {
         </View>
 
         {/* Chores Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Chores</ThemedText>
-            <TouchableOpacity 
-              onPress={() => router.push({
-                pathname: '/chores',
-                params: { childId: child.id, childName: child.name }
-              })}
-            >
-              <ThemedText style={styles.sectionAction}>Assign Chores</ThemedText>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.accountCard, { marginBottom: 0 }]}>
-            <View style={styles.choreInfo}>
-              <View style={styles.choreIconContainer}>
-                <Ionicons name="list-outline" size={24} color={BRAND_COLORS.teal} />
+        <TouchableOpacity 
+          style={styles.choresCard}
+          onPress={() => router.push({
+            pathname: '/chores',
+            params: { childId: child.id, childName: child.name }
+          })}
+        >
+          <View style={styles.choresIconContainer}>
+            <View style={styles.checklistContainer}>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
               </View>
-              <View style={styles.choreTextContainer}>
-                <ThemedText style={styles.choreTitle}>Weekly Chores</ThemedText>
-                <ThemedText style={styles.choreDescription}>
-                  Assign tasks for your child to complete and earn rewards
-                </ThemedText>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
+              </View>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
               </View>
             </View>
-            <TouchableOpacity 
-              style={styles.getStartedButton}
-              onPress={() => router.push({
-                pathname: '/chores',
-                params: { childId: child.id, childName: child.name }
-              })}
-            >
-              <ThemedText style={styles.getStartedText}>Set up</ThemedText>
-            </TouchableOpacity>
           </View>
-        </View>
+          <View style={styles.choresContent}>
+            <ThemedText style={styles.choresTitle}>Assign chores</ThemedText>
+            <ThemedText style={styles.choresDescription}>
+              Set them weekly, monthly or just one time.
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
 
         {/* Transaction History Button */}
         <TouchableOpacity style={styles.actionButton}>
@@ -359,52 +354,58 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#666666',
   },
-  section: {
+  choresCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  sectionAction: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
-  },
-  choreInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginBottom: 12,
-  },
-  choreIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(55, 166, 155, 0.1)',
+  choresIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    backgroundColor: '#e57373',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
-  choreTextContainer: {
+  checklistContainer: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    width: '70%',
+    height: '70%',
+  },
+  checklistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    width: '100%',
+  },
+  checklistLine: {
+    height: 2,
+    backgroundColor: '#FFFFFF',
+    flex: 1,
+    marginLeft: 4,
+  },
+  choresContent: {
     flex: 1,
   },
-  choreTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  choresTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
     marginBottom: 4,
   },
-  choreDescription: {
+  choresDescription: {
     fontSize: 14,
-    color: '#666666',
-    lineHeight: 20,
+    color: '#777777',
   },
   actionButton: {
     flexDirection: 'row',

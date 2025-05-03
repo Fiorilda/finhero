@@ -1,157 +1,315 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
+import { users } from '@/app/mock-data';
 
 // Raiffeisen Bank brand colors
 const BRAND_COLORS = {
   primary: '#FFEE00', // Raiffeisen Yellow
   secondary: '#004E9E', // Raiffeisen Blue
-  darkText: '#000000',
   lightGray: '#AAAAAA',
+  positive: '#4CAF50',
+  teal: '#37a69b',
 };
 
 export default function LoginScreen() {
-  const [isParent, setIsParent] = useState(true);
+  const [isChildMode, setIsChildMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [pin, setPin] = useState('');
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+
+  // Sample child users for quick login
+  const childUsers = users.filter(user => user.role === 'child');
+  const parentUsers = users.filter(user => user.role === 'parent');
 
   const handleLogin = () => {
-    // In a real app, you would authenticate with a backend
-    // For now, we'll just navigate to the main app
-    if (isParent) {
-      // Store user role in AsyncStorage/SecureStore in a real app
-      router.replace('/(tabs)');
+    if (isChildMode) {
+      // Child login with PIN
+      if (!selectedUser) {
+        Alert.alert('Error', 'Please select your account');
+        return;
+      }
+      
+      const childUser = users.find(u => u.id === selectedUser);
+      if (!childUser) {
+        Alert.alert('Error', 'User not found');
+        return;
+      }
+      
+      if (pin === childUser.pin) {
+        // Successful child login
+        console.log('Child logged in:', childUser.name);
+        router.replace('/(child)');
+      } else {
+        Alert.alert('Error', 'Invalid PIN');
+      }
     } else {
-      // Child login
-      router.replace('/(tabs)');
+      // Parent login with email/password
+      const parentUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'parent');
+      
+      if (parentUser && password === '1234') { // Mock password check
+        // Successful parent login
+        console.log('Parent logged in:', parentUser.name);
+        router.replace('/(tabs)');
+      } else {
+        Alert.alert('Error', 'Invalid email or password');
+      }
     }
   };
 
-  const toggleUserType = () => {
-    setIsParent(!isParent);
-    // Clear form when switching user types
-    setEmail('');
-    setPassword('');
+  const selectChildUser = (userId: string) => {
+    setSelectedUser(userId);
+    setPin(''); // Clear PIN when switching users
+  };
+
+  // Handle PIN input
+  const handlePinChange = (text: string) => {
+    // Only allow numbers and limit to 4 digits
+    const newPin = text.replace(/[^0-9]/g, '').substr(0, 4);
+    setPin(newPin);
+    
+    // Auto login when PIN is complete (4 digits)
+    if (newPin.length === 4 && selectedUser) {
+      const childUser = users.find(u => u.id === selectedUser);
+      if (childUser && newPin === childUser.pin) {
+        // Successful child login
+        console.log('Child logged in:', childUser.name);
+        setTimeout(() => {
+          router.replace('/(child)');
+        }, 300); // Small delay for better UX
+      }
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingContainer}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          bounces={false}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <Image 
-              source={require('@/assets/images/raiffeisen-logo.png')} 
-              style={styles.logo}
-              // Use a placeholder image if you don't have the actual logo
-              defaultSource={require('@/assets/images/icon.png')}
-            />
-            <ThemedText style={styles.appName}>FinHero</ThemedText>
-          </View>
-
-          <View style={styles.tabSelector}>
-            <TouchableOpacity 
-              style={[styles.tabButton, isParent && styles.activeTabButton]} 
-              onPress={() => setIsParent(true)}
-            >
-              <ThemedText style={[styles.tabText, isParent && styles.activeTabText]}>Parent</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tabButton, !isParent && styles.activeTabButton]} 
-              onPress={() => setIsParent(false)}
-            >
-              <ThemedText style={[styles.tabText, !isParent && styles.activeTabText]}>Child</ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <ThemedText style={styles.title}>
-            {isParent ? 'Parent Login' : 'Child Login'}
-          </ThemedText>
-          
-          <View style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Email</ThemedText>
-            <View style={styles.input}>
-              <Ionicons name="mail-outline" size={20} color={BRAND_COLORS.lightGray} style={styles.inputIcon} />
-              <TextInput
-                placeholder="Enter your email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.textInput}
-                keyboardType="email-address"
-                autoCapitalize="none"
+          <View style={styles.content}>
+            {/* Logo and Header */}
+            <View style={styles.header}>
+              <Image
+                source={{ uri: 'https://via.placeholder.com/100x100.png?text=FinHero' }}
+                style={styles.logo}
               />
+              <Text style={styles.title}>FinHero</Text>
+              <Text style={styles.subtitle}>Financial education for kids</Text>
             </View>
-          </View>
 
-          <View style={styles.inputContainer}>
-            <ThemedText style={styles.label}>Password</ThemedText>
-            <View style={styles.input}>
-              <Ionicons name="lock-closed-outline" size={20} color={BRAND_COLORS.lightGray} style={styles.inputIcon} />
-              <TextInput
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                style={styles.textInput}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons 
-                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                  size={20} 
-                  color={BRAND_COLORS.lightGray} 
-                />
+            {/* Toggle between Parent and Child modes */}
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[styles.toggleButton, !isChildMode && styles.toggleButtonActive]}
+                onPress={() => {
+                  setIsChildMode(false);
+                  setSelectedUser(null);
+                  setPin('');
+                }}
+              >
+                <Text style={[styles.toggleText, !isChildMode && styles.toggleTextActive]}>Parent</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, isChildMode && styles.toggleButtonActive]}
+                onPress={() => {
+                  setIsChildMode(true);
+                  setEmail('');
+                  setPassword('');
+                }}
+              >
+                <Text style={[styles.toggleText, isChildMode && styles.toggleTextActive]}>Child</Text>
               </TouchableOpacity>
             </View>
-          </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
-            <ThemedText style={styles.forgotPasswordText}>Forgot Password?</ThemedText>
-          </TouchableOpacity>
+            {/* Parent Login Form */}
+            {!isChildMode && (
+              <View style={styles.form}>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                  <Text style={styles.loginButtonText}>Login</Text>
+                </TouchableOpacity>
+                
+                {/* Parent Quick Login (for demo) */}
+                <View style={styles.quickLoginSection}>
+                  <Text style={styles.quickLoginTitle}>Quick Login (Demo)</Text>
+                  <View style={styles.quickLoginOptions}>
+                    {parentUsers.map(user => (
+                      <TouchableOpacity 
+                        key={user.id}
+                        style={styles.quickLoginItem}
+                        onPress={() => {
+                          setEmail(user.email);
+                          setPassword('1234'); // Demo password
+                        }}
+                      >
+                        <View style={styles.quickLoginAvatar}>
+                          <Ionicons 
+                            name="person" 
+                            size={24} 
+                            color={BRAND_COLORS.secondary} 
+                          />
+                        </View>
+                        <Text style={styles.quickLoginName}>{user.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
 
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLogin}
-          >
-            <ThemedText style={styles.loginButtonText}>Login</ThemedText>
-          </TouchableOpacity>
+            {/* Child Login Form */}
+            {isChildMode && (
+              <View style={styles.form}>
+                {/* Child selection */}
+                <Text style={styles.sectionLabel}>Select your account:</Text>
+                <View style={styles.childrenContainer}>
+                  {childUsers.map(child => (
+                    <TouchableOpacity
+                      key={child.id}
+                      style={[
+                        styles.childItem,
+                        selectedUser === child.id && styles.childItemSelected
+                      ]}
+                      onPress={() => selectChildUser(child.id)}
+                    >
+                      <View style={styles.childAvatar}>
+                        <Ionicons 
+                          name="person-circle" 
+                          size={40} 
+                          color={child.avatar === 'girl' ? '#FF4081' : '#2196F3'} 
+                        />
+                      </View>
+                      <Text style={styles.childName}>{child.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-          <View style={styles.footer}>
-            <ThemedText style={styles.footerText}>Don't have an account?</ThemedText>
-            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <ThemedText style={styles.signupText}>Sign Up</ThemedText>
-            </TouchableOpacity>
+                {/* PIN entry when child is selected */}
+                {selectedUser && (
+                  <View style={styles.pinSection}>
+                    <Text style={styles.pinLabel}>Enter your PIN to login</Text>
+                    <View style={styles.pinContainer}>
+                      <TextInput
+                        style={styles.pinInput}
+                        value={pin}
+                        onChangeText={handlePinChange}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        secureTextEntry
+                        autoFocus
+                      />
+                      <View style={styles.pinDots}>
+                        {[...Array(4)].map((_, index) => (
+                          <View
+                            key={index}
+                            style={[
+                              styles.pinDot,
+                              index < pin.length && styles.pinDotFilled
+                            ]}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    <Text style={styles.pinHint}>
+                      {/* Show PIN for demo purposes */}
+                      (Demo PIN: {users.find(u => u.id === selectedUser)?.pin})
+                    </Text>
+                  </View>
+                )}
+
+                {/* Login button for child mode */}
+                <TouchableOpacity 
+                  style={[
+                    styles.loginButton,
+                    (!selectedUser || pin.length < 4) && styles.loginButtonDisabled
+                  ]} 
+                  onPress={handleLogin}
+                  disabled={!selectedUser || pin.length < 4}
+                >
+                  <Text style={styles.loginButtonText}>Login</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Sign Up Section */}
+            {!isChildMode && (
+              <View style={styles.signupContainer}>
+                <Text style={styles.signupText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push('/signup')}>
+                  <Text style={styles.signupLink}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
+
+const windowWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  keyboardAvoidingContainer: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 40,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: Dimensions.get('window').height - (Platform.OS === 'ios' ? 40 : 0),
   },
   header: {
     alignItems: 'center',
@@ -160,102 +318,215 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
-    resizeMode: 'contain',
+    marginBottom: 16,
+    borderRadius: 20,
   },
-  appName: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-    marginTop: 10,
     color: BRAND_COLORS.secondary,
+    marginBottom: 8,
   },
-  tabSelector: {
+  subtitle: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  toggleContainer: {
     flexDirection: 'row',
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
-    marginBottom: 30,
+    marginBottom: 24,
+    padding: 4,
     width: '100%',
   },
-  tabButton: {
+  toggleButton: {
     flex: 1,
-    padding: 12,
+    paddingVertical: 12,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 6,
   },
-  activeTabButton: {
-    backgroundColor: BRAND_COLORS.primary,
+  toggleButtonActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  tabText: {
+  toggleText: {
+    fontSize: 16,
     fontWeight: '500',
-    color: BRAND_COLORS.lightGray,
+    color: '#888888',
   },
-  activeTabText: {
-    color: BRAND_COLORS.darkText,
-    fontWeight: 'bold',
+  toggleTextActive: {
+    color: BRAND_COLORS.secondary,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    alignSelf: 'flex-start',
+  form: {
+    width: '100%',
   },
   inputContainer: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    marginBottom: 8,
-    color: '#555555',
-  },
-  input: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#DDDDDD',
     borderRadius: 8,
-    paddingHorizontal: 15,
+    marginBottom: 16,
+    paddingHorizontal: 16,
     height: 50,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
-  textInput: {
+  input: {
     flex: 1,
-    height: 50,
     fontSize: 16,
+    color: '#333333',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 30,
+    marginBottom: 24,
   },
   forgotPasswordText: {
     color: BRAND_COLORS.secondary,
-    fontWeight: '500',
+    fontSize: 14,
   },
   loginButton: {
     backgroundColor: BRAND_COLORS.secondary,
     borderRadius: 8,
-    paddingVertical: 15,
-    width: '100%',
+    paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#CCCCCC',
   },
   loginButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
     fontSize: 16,
+    fontWeight: 'bold',
   },
-  footer: {
+  signupContainer: {
     flexDirection: 'row',
-    marginTop: 20,
-    justifyContent: 'center',
-  },
-  footerText: {
-    color: '#555555',
-    marginRight: 5,
+    marginTop: 24,
   },
   signupText: {
+    color: '#666666',
+    fontSize: 14,
+  },
+  signupLink: {
     color: BRAND_COLORS.secondary,
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  childrenContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 24,
+  },
+  childItem: {
+    alignItems: 'center',
+    margin: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    width: windowWidth / 3 - 24,
+  },
+  childItemSelected: {
+    borderColor: BRAND_COLORS.teal,
+    backgroundColor: 'rgba(55, 166, 155, 0.1)',
+  },
+  childAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  childName: {
+    fontSize: 14,
+    color: '#333333',
+    textAlign: 'center',
+  },
+  pinSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  pinLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  pinContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pinInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+  pinDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  pinDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#EEEEEE',
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+  },
+  pinDotFilled: {
+    backgroundColor: BRAND_COLORS.secondary,
+    borderColor: BRAND_COLORS.secondary,
+  },
+  pinHint: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 8,
+  },
+  quickLoginSection: {
+    marginTop: 24,
+  },
+  quickLoginTitle: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  quickLoginOptions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  quickLoginItem: {
+    alignItems: 'center',
+    margin: 8,
+  },
+  quickLoginAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  quickLoginName: {
+    fontSize: 12,
+    color: '#333333',
   },
 }); 
