@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -39,6 +40,7 @@ const initialChildren = [
 ];
 
 export default function FamilyScreen() {
+  const router = useRouter();
   const [children, setChildren] = useState(initialChildren);
   const [modalVisible, setModalVisible] = useState(false);
   const [transferModalVisible, setTransferModalVisible] = useState(false);
@@ -182,57 +184,78 @@ export default function FamilyScreen() {
     }));
   };
 
-  const renderChildItem = ({ item }: { item: typeof children[0] }) => (
-    <View style={styles.childCard}>
-      <View style={styles.childInfo}>
-        <View style={[styles.avatar, { backgroundColor: item.avatar === 'girl' ? '#FFC0CB' : '#ADD8E6' }]}>
-          <Ionicons 
-            name="person" 
-            size={30} 
-            color={BRAND_COLORS.secondary} 
-          />
-        </View>
-        <View style={styles.childDetails}>
-          <View style={styles.nameStatusRow}>
-            <ThemedText style={styles.childName}>{item.name}</ThemedText>
-            <View style={[styles.statusBadge, { backgroundColor: item.isActive ? '#E8F5E9' : '#FFEBEE' }]}>
-              <ThemedText style={[styles.statusText, { color: item.isActive ? BRAND_COLORS.positive : '#F44336' }]}>
-                {item.isActive ? 'Active' : 'Inactive'}
-              </ThemedText>
-            </View>
-          </View>
-          <ThemedText style={styles.childAge}>{item.age} years old</ThemedText>
-          {item.school ? <ThemedText style={styles.childSchool}>{item.school}</ThemedText> : null}
-        </View>
-      </View>
-      
-      <View style={styles.balanceSection}>
-        <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
-        <ThemedText style={styles.balanceAmount}>${item.balance.toFixed(2)}</ThemedText>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.transferButton]} 
-            onPress={() => openTransferModal(item.id)}
-          >
-            <Ionicons name="wallet-outline" size={16} color="#FFFFFF" />
-            <ThemedText style={styles.actionButtonText}>Transfer</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.toggleButton, { backgroundColor: item.isActive ? '#F44336' : BRAND_COLORS.positive }]}
-            onPress={() => toggleAccountStatus(item.id)}
-          >
-            <ThemedText style={styles.actionButtonText}>{item.isActive ? 'Deactivate' : 'Activate'}</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
+  const navigateToChildDetails = (childId: string) => {
+    router.push({
+      pathname: '/child-details',
+      params: { id: childId }
+    });
+  };
 
-      <TouchableOpacity 
-        style={styles.removeButton}
-        onPress={() => removeChild(item.id)}
-      >
-        <Ionicons name="close-circle" size={22} color="#FF6B6B" />
-      </TouchableOpacity>
-    </View>
+  const renderChildItem = ({ item }: { item: typeof children[0] }) => (
+    <TouchableOpacity 
+      onPress={() => navigateToChildDetails(item.id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.childCard}>
+        <View style={styles.childInfo}>
+          <View style={[styles.avatar, { backgroundColor: item.avatar === 'girl' ? '#FFC0CB' : '#ADD8E6' }]}>
+            <Ionicons 
+              name="person" 
+              size={30} 
+              color={BRAND_COLORS.secondary} 
+            />
+          </View>
+          <View style={styles.childDetails}>
+            <View style={styles.nameStatusRow}>
+              <ThemedText style={styles.childName}>{item.name}</ThemedText>
+              <View style={[styles.statusBadge, { backgroundColor: item.isActive ? '#E8F5E9' : '#FFEBEE' }]}>
+                <ThemedText style={[styles.statusText, { color: item.isActive ? BRAND_COLORS.positive : '#F44336' }]}>
+                  {item.isActive ? 'Active' : 'Inactive'}
+                </ThemedText>
+              </View>
+            </View>
+            <ThemedText style={styles.childAge}>{item.age} years old</ThemedText>
+            {item.school ? <ThemedText style={styles.childSchool}>{item.school}</ThemedText> : null}
+          </View>
+        </View>
+        
+        <View style={styles.balanceSection}>
+          <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
+          <ThemedText style={styles.balanceAmount}>${item.balance.toFixed(2)}</ThemedText>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.transferButton]} 
+              onPress={(e) => {
+                e.stopPropagation();
+                openTransferModal(item.id);
+              }}
+            >
+              <Ionicons name="wallet-outline" size={16} color="#FFFFFF" />
+              <ThemedText style={styles.actionButtonText}>Transfer</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.toggleButton, { backgroundColor: item.isActive ? '#F44336' : BRAND_COLORS.positive }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleAccountStatus(item.id);
+              }}
+            >
+              <ThemedText style={styles.actionButtonText}>{item.isActive ? 'Deactivate' : 'Activate'}</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.removeButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            removeChild(item.id);
+          }}
+        >
+          <Ionicons name="close-circle" size={22} color="#FF6B6B" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 
   const renderStepIndicator = () => (

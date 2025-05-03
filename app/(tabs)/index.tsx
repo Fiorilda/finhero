@@ -69,7 +69,10 @@ export default function HomeScreen() {
             <TouchableOpacity 
               key={child.id}
               style={styles.childIconButton}
-              onPress={() => router.push('/(tabs)/family')}
+              onPress={() => router.push({
+                pathname: '/child-details',
+                params: { id: child.id }
+              })}
             >
               <View style={[
                 styles.childAvatar, 
