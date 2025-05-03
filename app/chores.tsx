@@ -14,6 +14,7 @@ import {
   View
 } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -60,6 +61,7 @@ export default function ChoresScreen() {
   const router = useRouter();
   const { childId, childName } = useLocalSearchParams();
   const childIdString = typeof childId === 'string' ? childId : '1';
+  const childNameString = typeof childName === 'string' ? childName : 'Child';
   
   // State for chores
   const [chores, setChores] = useState([]);
@@ -196,7 +198,7 @@ export default function ChoresScreen() {
     
     Alert.alert(
       "Chores Saved",
-      `${childName}'s chores have been updated.`,
+      `${childNameString}'s chores have been updated.`,
       [{ text: "OK", onPress: () => router.back() }]
     );
   };
@@ -253,228 +255,225 @@ export default function ChoresScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText style={styles.title}>{childName}'s Chores</ThemedText>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <View style={styles.contentContainer}>
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryContent}>
-            <View style={styles.summaryIconContainer}>
-              <Ionicons name="trophy" size={24} color="#FFD700" />
-            </View>
-            <View style={styles.summaryTextContainer}>
-              <ThemedText style={styles.summaryTitle}>
-                Weekly Chores Summary
-              </ThemedText>
-              <ThemedText style={styles.summaryDescription}>
-                {chores.filter(c => c.completed).length} of {chores.length} chores completed
-              </ThemedText>
-            </View>
-          </View>
-          
-          <View style={styles.earningSummary}>
-            <ThemedText style={styles.earningTitle}>Earnings:</ThemedText>
-            <ThemedText style={styles.earningAmount}>
-              ${chores.filter(c => c.completed).reduce((sum, c) => sum + c.value, 0)}
-            </ThemedText>
-          </View>
-        </View>
-        
-        <View style={styles.listHeader}>
-          <ThemedText style={styles.sectionTitle}>Weekly Chores</ThemedText>
-          <TouchableOpacity 
-            style={styles.addChoreButton}
-            onPress={handleAddChore}
-          >
-            <Ionicons name="add" size={20} color="#FFFFFF" />
-            <ThemedText style={styles.addChoreText}>Add Chore</ThemedText>
-          </TouchableOpacity>
-        </View>
-        
-        <ThemedText style={styles.sectionDescription}>
-          Assign chores that will reset each week. Each chore can have a dollar value
-          that will be added to the allowance when completed.
-        </ThemedText>
-        
-        <FlatList
-          data={chores}
-          renderItem={renderChoreItem}
-          keyExtractor={item => item.id}
-          style={styles.choresList}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyList}>
-              <ThemedText style={styles.emptyListText}>
-                No chores yet. Tap "Add Chore" to create one.
-              </ThemedText>
-            </View>
-          )}
-        />
-        
-        <TouchableOpacity style={styles.saveButton} onPress={saveChores}>
-          <ThemedText style={styles.saveButtonText}>Save Chores</ThemedText>
-        </TouchableOpacity>
-      </View>
+      <HeaderWithBack title={`${childNameString}'s Chores`} />
       
-      {/* Edit Chore Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidView}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}
-        >
-          <View style={styles.editModalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>
-                {selectedChore ? 'Edit Chore' : 'Add Chore'}
+        <View style={styles.content}>
+          <View style={styles.summaryContainer}>
+            <View style={styles.summaryItem}>
+              <ThemedText style={styles.summaryNumber}>{chores.length}</ThemedText>
+              <ThemedText style={styles.summaryLabel}>Total</ThemedText>
+            </View>
+            <View style={styles.summaryItem}>
+              <ThemedText style={styles.summaryNumber}>
+                {chores.filter(c => c.enabled).length}
               </ThemedText>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
+              <ThemedText style={styles.summaryLabel}>Enabled</ThemedText>
             </View>
-            
-            <View style={styles.formGroup}>
-              <ThemedText style={styles.inputLabel}>Chore Name</ThemedText>
-              <TextInput
-                style={styles.textInput}
-                value={choreName}
-                onChangeText={setChoreName}
-                placeholder="e.g. Clean room"
-              />
+            <View style={styles.summaryItem}>
+              <ThemedText style={styles.summaryNumber}>
+                {chores.filter(c => c.completed).length}
+              </ThemedText>
+              <ThemedText style={styles.summaryLabel}>Completed</ThemedText>
             </View>
-            
-            <View style={styles.formGroup}>
-              <ThemedText style={styles.inputLabel}>Value ($)</ThemedText>
-              <TextInput
-                style={[styles.textInput, styles.valueInput]}
-                value={choreValue}
-                onChangeText={setChoreValue}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-            
-            <View style={styles.formGroup}>
-              <ThemedText style={styles.inputLabel}>Due Day</ThemedText>
-              <TouchableOpacity 
-                style={styles.dueDaySelector}
-                onPress={() => setDueDayModalVisible(true)}
-              >
-                <ThemedText style={styles.dueDayText}>{choreDueDay}</ThemedText>
-                <Ionicons name="chevron-down" size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.formGroup}>
-              <View style={styles.enabledContainer}>
-                <ThemedText style={styles.inputLabel}>Enabled</ThemedText>
-                <Switch
-                  value={choreEnabled}
-                  onValueChange={setChoreEnabled}
-                  trackColor={{ false: '#D0D0D0', true: '#C8E6C9' }}
-                  thumbColor={choreEnabled ? BRAND_COLORS.positive : '#F5F5F5'}
-                />
+          </View>
+
+          <FlatList
+            data={chores}
+            renderItem={renderChoreItem}
+            keyExtractor={item => item.id}
+            style={styles.choresList}
+            contentContainerStyle={styles.choresTodayContent}
+            ListHeaderComponent={
+              <View style={styles.sectionHeader}>
+                <ThemedText style={styles.sectionTitle}>All Chores</ThemedText>
+                <TouchableOpacity onPress={handleAddChore}>
+                  <Ionicons name="add-circle" size={28} color={BRAND_COLORS.secondary} />
+                </TouchableOpacity>
               </View>
-            </View>
-            
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="checkbox-outline" size={50} color="#AAAAAA" />
+                <ThemedText style={styles.emptyText}>No chores added yet</ThemedText>
+                <TouchableOpacity 
+                  style={styles.addButton}
+                  onPress={handleAddChore}
+                >
+                  <ThemedText style={styles.addButtonText}>Add a Chore</ThemedText>
+                </TouchableOpacity>
+              </View>
+            }
+          />
+
+          <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={styles.saveChoreButton}
-              onPress={handleSaveChore}
+              style={styles.saveButton}
+              onPress={saveChores}
             >
-              <ThemedText style={styles.saveChoreButtonText}>
-                {selectedChore ? 'Update Chore' : 'Add Chore'}
-              </ThemedText>
+              <ThemedText style={styles.saveButtonText}>Save Chores</ThemedText>
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
-      
-      {/* Delete Confirmation Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.deleteModalContent}>
-            <ThemedText style={styles.deleteModalTitle}>Delete Chore?</ThemedText>
-            <ThemedText style={styles.deleteModalText}>
-              Are you sure you want to delete "{choreToDelete?.name}"?
-            </ThemedText>
-            
-            <View style={styles.deleteModalButtons}>
-              <TouchableOpacity 
-                style={[styles.deleteModalButton, styles.cancelButton]}
-                onPress={() => setDeleteModalVisible(false)}
-              >
-                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-              </TouchableOpacity>
+        </View>
+
+        {/* Edit Chore Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={editModalVisible}
+          onRequestClose={() => setEditModalVisible(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
+          >
+            <View style={styles.editModalContent}>
+              <View style={styles.modalHeader}>
+                <ThemedText style={styles.modalTitle}>
+                  {selectedChore ? 'Edit Chore' : 'Add Chore'}
+                </ThemedText>
+                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.formGroup}>
+                <ThemedText style={styles.inputLabel}>Chore Name</ThemedText>
+                <TextInput
+                  style={styles.textInput}
+                  value={choreName}
+                  onChangeText={setChoreName}
+                  placeholder="e.g. Clean room"
+                />
+              </View>
+              
+              <View style={styles.formGroup}>
+                <ThemedText style={styles.inputLabel}>Value ($)</ThemedText>
+                <TextInput
+                  style={[styles.textInput, styles.valueInput]}
+                  value={choreValue}
+                  onChangeText={setChoreValue}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                />
+              </View>
+              
+              <View style={styles.formGroup}>
+                <ThemedText style={styles.inputLabel}>Due Day</ThemedText>
+                <TouchableOpacity 
+                  style={styles.dueDaySelector}
+                  onPress={() => setDueDayModalVisible(true)}
+                >
+                  <ThemedText style={styles.dueDayText}>{choreDueDay}</ThemedText>
+                  <Ionicons name="chevron-down" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.formGroup}>
+                <View style={styles.enabledContainer}>
+                  <ThemedText style={styles.inputLabel}>Enabled</ThemedText>
+                  <Switch
+                    value={choreEnabled}
+                    onValueChange={setChoreEnabled}
+                    trackColor={{ false: '#D0D0D0', true: '#C8E6C9' }}
+                    thumbColor={choreEnabled ? BRAND_COLORS.positive : '#F5F5F5'}
+                  />
+                </View>
+              </View>
               
               <TouchableOpacity 
-                style={[styles.deleteModalButton, styles.confirmButton]}
-                onPress={handleDeleteChore}
+                style={styles.saveChoreButton}
+                onPress={handleSaveChore}
               >
-                <ThemedText style={styles.confirmButtonText}>Delete</ThemedText>
+                <ThemedText style={styles.saveChoreButtonText}>
+                  {selectedChore ? 'Update Chore' : 'Add Chore'}
+                </ThemedText>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-      
-      {/* Due Day Selection Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={dueDayModalVisible}
-        onRequestClose={() => setDueDayModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>Select Due Day</ThemedText>
-              <TouchableOpacity onPress={() => setDueDayModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={DUE_DAY_OPTIONS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
+          </KeyboardAvoidingView>
+        </Modal>
+        
+        {/* Delete Confirmation Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={deleteModalVisible}
+          onRequestClose={() => setDeleteModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.deleteModalContent}>
+              <ThemedText style={styles.deleteModalTitle}>Delete Chore?</ThemedText>
+              <ThemedText style={styles.deleteModalText}>
+                Are you sure you want to delete "{choreToDelete?.name}"?
+              </ThemedText>
+              
+              <View style={styles.deleteModalButtons}>
                 <TouchableOpacity 
-                  style={[
-                    styles.dueDayOption,
-                    choreDueDay === item && styles.dueDayOptionSelected
-                  ]}
-                  onPress={() => {
-                    setChoreDueDay(item);
-                    setDueDayModalVisible(false);
-                  }}
+                  style={[styles.deleteModalButton, styles.cancelButton]}
+                  onPress={() => setDeleteModalVisible(false)}
                 >
-                  <ThemedText style={[
-                    styles.dueDayOptionText,
-                    choreDueDay === item && styles.dueDayOptionTextSelected
-                  ]}>
-                    {item}
-                  </ThemedText>
-                  {choreDueDay === item && (
-                    <Ionicons name="checkmark" size={24} color={BRAND_COLORS.teal} />
-                  )}
+                  <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
                 </TouchableOpacity>
-              )}
-            />
+                
+                <TouchableOpacity 
+                  style={[styles.deleteModalButton, styles.confirmButton]}
+                  onPress={handleDeleteChore}
+                >
+                  <ThemedText style={styles.confirmButtonText}>Delete</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+        
+        {/* Due Day Selection Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={dueDayModalVisible}
+          onRequestClose={() => setDueDayModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <ThemedText style={styles.modalTitle}>Select Due Day</ThemedText>
+                <TouchableOpacity onPress={() => setDueDayModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={DUE_DAY_OPTIONS}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={[
+                      styles.dueDayOption,
+                      choreDueDay === item && styles.dueDayOptionSelected
+                    ]}
+                    onPress={() => {
+                      setChoreDueDay(item);
+                      setDueDayModalVisible(false);
+                    }}
+                  >
+                    <ThemedText style={[
+                      styles.dueDayOptionText,
+                      choreDueDay === item && styles.dueDayOptionTextSelected
+                    ]}>
+                      {item}
+                    </ThemedText>
+                    {choreDueDay === item && (
+                      <Ionicons name="checkmark" size={24} color={BRAND_COLORS.teal} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -482,84 +481,37 @@ export default function ChoresScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: BRAND_COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  keyboardAvoidView: {
+    flex: 1,
   },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  contentContainer: {
+  content: {
     flex: 1,
     padding: 16,
   },
-  summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  summaryContent: {
+  summaryContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
-  summaryIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+  summaryItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
   },
-  summaryTextContainer: {
-    flex: 1,
-  },
-  summaryTitle: {
-    fontSize: 16,
+  summaryNumber: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#333333',
     marginBottom: 4,
   },
-  summaryDescription: {
+  summaryLabel: {
     fontSize: 14,
     color: '#666666',
   },
-  earningSummary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    padding: 12,
-  },
-  earningTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  earningAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: BRAND_COLORS.positive,
-  },
-  listHeader: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -570,107 +522,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333333',
   },
-  addChoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: BRAND_COLORS.teal,
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  addChoreText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginLeft: 4,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
   choresList: {
     flex: 1,
     marginBottom: 16,
   },
-  emptyList: {
+  choresTodayContent: {
+    padding: 16,
+  },
+  emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
   },
-  emptyListText: {
+  emptyText: {
     fontSize: 16,
     color: '#666666',
-    textAlign: 'center',
+    marginBottom: 16,
   },
-  choreItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  addButton: {
+    backgroundColor: BRAND_COLORS.teal,
+    borderRadius: 24,
     paddingVertical: 12,
+    paddingHorizontal: 24,
   },
-  choreLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  completedCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#CCCCCC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  completedCheckboxActive: {
-    backgroundColor: BRAND_COLORS.positive,
-    borderColor: BRAND_COLORS.positive,
-  },
-  choreTextContainer: {
-    flex: 1,
-  },
-  choreName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333333',
-    marginBottom: 2,
-  },
-  choreNameCompleted: {
-    textDecorationLine: 'line-through',
-    color: '#888888',
-  },
-  choreDueDay: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  choreRight: {
-    alignItems: 'flex-end',
-  },
-  choreValue: {
+  addButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 6,
   },
-  choreActions: {
-    flexDirection: 'row',
+  buttonContainer: {
     alignItems: 'center',
-  },
-  editButton: {
-    padding: 6,
-    marginRight: 8,
-  },
-  deleteButton: {
-    padding: 6,
-    marginRight: 12,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#EEEEEE',
+    marginTop: 20,
   },
   saveButton: {
     backgroundColor: BRAND_COLORS.teal,
@@ -841,5 +723,68 @@ const styles = StyleSheet.create({
   dueDayOptionTextSelected: {
     color: BRAND_COLORS.teal,
     fontWeight: '500',
+  },
+  choreItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  choreLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  completedCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#CCCCCC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  completedCheckboxActive: {
+    backgroundColor: BRAND_COLORS.positive,
+    borderColor: BRAND_COLORS.positive,
+  },
+  choreTextContainer: {
+    flex: 1,
+  },
+  choreName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 2,
+  },
+  choreNameCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#888888',
+  },
+  choreDueDay: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  choreRight: {
+    alignItems: 'flex-end',
+  },
+  choreValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 6,
+  },
+  choreActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editButton: {
+    padding: 6,
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 6,
+    marginRight: 12,
   },
 }); 

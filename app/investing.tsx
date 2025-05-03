@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -17,16 +18,11 @@ const BRAND_COLORS = {
 export default function InvestingScreen() {
   const router = useRouter();
   const { childId, childName } = useLocalSearchParams();
+  const childNameString = typeof childName === 'string' ? childName : 'Child';
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText style={styles.title}>{childName}</ThemedText>
-        <View style={{ width: 24 }} />
-      </View>
+      <HeaderWithBack title={`${childNameString}'s Investing`} />
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <ThemedText style={styles.welcomeTitle}>Welcome to Invest!</ThemedText>
@@ -116,28 +112,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F8F8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: BRAND_COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
   scrollContainer: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 16,
   },
   welcomeTitle: {
     fontSize: 28,
