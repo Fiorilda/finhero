@@ -7,14 +7,22 @@ import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+// Raiffeisen Bank brand colors
+const BRAND_COLORS = {
+  primary: '#FFEE00', // Raiffeisen Yellow
+  secondary: '#004E9E', // Raiffeisen Blue
+  darkText: '#000000',
+  lightGray: '#AAAAAA',
+};
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#5BCFB8',
-        tabBarInactiveTintColor: '#AAAAAA',
+        tabBarActiveTintColor: BRAND_COLORS.secondary,
+        tabBarInactiveTintColor: BRAND_COLORS.lightGray,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -37,9 +45,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="accounts"
+        name="wallet"
         options={{
-          title: 'Accounts',
+          title: 'Wallet',
           tabBarIcon: ({ color, focused }) => 
             focused ? 
               <Ionicons name="wallet" size={24} color={color} /> : 
@@ -47,33 +55,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chores"
+        name="family"
         options={{
-          title: 'Chores',
+          title: 'Children',
           tabBarIcon: ({ color, focused }) => 
             focused ? 
-              <Ionicons name="checkmark-circle" size={24} color={color} /> : 
-              <Ionicons name="checkmark-circle-outline" size={24} color={color} />,
+              <Ionicons name="people" size={24} color={color} /> : 
+              <Ionicons name="people-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="safety"
+        name="profile"
         options={{
-          title: 'Safety',
+          title: 'Profile',
           tabBarIcon: ({ color, focused }) => 
             focused ? 
-              <Ionicons name="location" size={24} color={color} /> : 
-              <Ionicons name="location-outline" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="game"
-        options={{
-          title: 'Money Game',
-          tabBarIcon: ({ color, focused }) => 
-            focused ? 
-              <Ionicons name="trophy" size={24} color={color} /> : 
-              <Ionicons name="trophy-outline" size={24} color={color} />,
+              <Ionicons name="person" size={24} color={color} /> : 
+              <Ionicons name="person-outline" size={24} color={color} />,
         }}
       />
     </Tabs>

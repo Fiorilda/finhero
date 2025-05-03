@@ -1,8 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+
+// Raiffeisen Bank brand colors
+const BRAND_COLORS = {
+  primary: '#FFEE00', // Raiffeisen Yellow
+  secondary: '#004E9E', // Raiffeisen Blue
+  darkText: '#000000',
+  lightGray: '#AAAAAA',
+  accent1: '#FFD100', // Darker yellow
+  accent2: '#0069B4', // Lighter blue
+  positive: '#4CAF50',
+  negative: '#F44336',
+};
 
 export default function HomeScreen() {
   return (
@@ -13,189 +26,150 @@ export default function HomeScreen() {
           <ThemedText style={styles.welcomeText}>Hello,</ThemedText>
           <ThemedText style={styles.nameText}>Alex Smith</ThemedText>
         </View>
-        <TouchableOpacity style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={40} color="#5BCFB8" />
+        <TouchableOpacity style={styles.avatarContainer} onPress={() => router.push('/(tabs)/profile')}>
+          <Ionicons name="person-circle" size={40} color={BRAND_COLORS.secondary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Total Balance */}
-        <View style={styles.balanceContainer}>
-          <ThemedText style={styles.balanceLabel}>Total Balance</ThemedText>
+        <View style={[styles.balanceContainer, { backgroundColor: BRAND_COLORS.primary }]}>
+          <ThemedText style={styles.balanceLabel}>Wallet Balance</ThemedText>
           <ThemedText style={styles.balanceAmount}>$1,287.45</ThemedText>
-          <View style={styles.growthContainer}>
-            <Ionicons name="arrow-up" size={16} color="#4CAF50" />
-            <ThemedText style={styles.growthText}>+$56.80 this month</ThemedText>
-          </View>
+          <TouchableOpacity style={styles.viewDetailsButton} onPress={() => router.push('/(tabs)/wallet')}>
+            <ThemedText style={styles.viewDetailsText}>View Details</ThemedText>
+            <Ionicons name="chevron-forward" size={16} color={BRAND_COLORS.secondary} />
+          </TouchableOpacity>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.quickActionsContainer}>
-          <TouchableOpacity style={styles.quickActionButton}>
+          <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/(tabs)/wallet')}>
             <View style={[styles.actionIcon, { backgroundColor: '#E8F5FF' }]}>
-              <Ionicons name="swap-horizontal" size={22} color="#2196F3" />
-            </View>
-            <ThemedText style={styles.actionText}>Transfer</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.quickActionButton}>
-            <View style={[styles.actionIcon, { backgroundColor: '#F9F0FF' }]}>
-              <Ionicons name="add-circle-outline" size={22} color="#9C27B0" />
+              <Ionicons name="add-circle-outline" size={22} color={BRAND_COLORS.secondary} />
             </View>
             <ThemedText style={styles.actionText}>Add Money</ThemedText>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.quickActionButton}>
-            <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="card-outline" size={22} color="#4CAF50" />
+          <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/(tabs)/wallet')}>
+            <View style={[styles.actionIcon, { backgroundColor: '#F9F0FF' }]}>
+              <Ionicons name="swap-horizontal" size={22} color={BRAND_COLORS.secondary} />
             </View>
-            <ThemedText style={styles.actionText}>Pay</ThemedText>
+            <ThemedText style={styles.actionText}>Transfer</ThemedText>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.quickActionButton}>
-            <View style={[styles.actionIcon, { backgroundColor: '#FFF8E1' }]}>
-              <Ionicons name="options-outline" size={22} color="#FFC107" />
+          <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/(tabs)/family')}>
+            <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
+              <Ionicons name="people" size={22} color={BRAND_COLORS.secondary} />
             </View>
-            <ThemedText style={styles.actionText}>More</ThemedText>
+            <ThemedText style={styles.actionText}>Family</ThemedText>
           </TouchableOpacity>
         </View>
 
-        {/* Accounts Section */}
+        {/* Children Accounts Section */}
         <View style={styles.sectionHeader}>
-          <ThemedText style={styles.sectionTitle}>Your Accounts</ThemedText>
-          <TouchableOpacity>
-            <ThemedText style={styles.seeAllText}>See All</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Children Accounts</ThemedText>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/family')}>
+            <ThemedText style={[styles.seeAllText, { color: BRAND_COLORS.secondary }]}>See All</ThemedText>
           </TouchableOpacity>
         </View>
 
-        {/* Spending Account */}
-        <TouchableOpacity style={styles.accountCard}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.accountIcon, { backgroundColor: '#E8F5FF' }]}>
-              <Ionicons name="card" size={24} color="#2196F3" />
+        {/* Child Account Cards */}
+        <TouchableOpacity 
+          style={styles.childCard}
+          onPress={() => router.push('/(tabs)/family')}
+        >
+          <View style={styles.childLeftSection}>
+            <View style={[styles.childAvatar, { backgroundColor: '#FFC0CB' }]}>
+              <Ionicons name="person" size={24} color={BRAND_COLORS.secondary} />
             </View>
             <View>
-              <ThemedText style={styles.accountName}>Spending Account</ThemedText>
-              <ThemedText style={styles.accountNumber}>**** 4582</ThemedText>
+              <ThemedText style={styles.childName}>Emma Smith</ThemedText>
+              <ThemedText style={styles.childAge}>12 years old</ThemedText>
             </View>
           </View>
           <View>
-            <ThemedText style={styles.accountBalance}>$752.30</ThemedText>
+            <ThemedText style={styles.childBalance}>$120.50</ThemedText>
             <ThemedText style={styles.availableText}>Available</ThemedText>
           </View>
         </TouchableOpacity>
 
-        {/* Savings Account */}
-        <TouchableOpacity style={styles.accountCard}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.accountIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="leaf" size={24} color="#4CAF50" />
+        <TouchableOpacity 
+          style={styles.childCard}
+          onPress={() => router.push('/(tabs)/family')}
+        >
+          <View style={styles.childLeftSection}>
+            <View style={[styles.childAvatar, { backgroundColor: '#ADD8E6' }]}>
+              <Ionicons name="person" size={24} color={BRAND_COLORS.secondary} />
             </View>
             <View>
-              <ThemedText style={styles.accountName}>Savings Account</ThemedText>
-              <ThemedText style={styles.accountNumber}>**** 7865</ThemedText>
+              <ThemedText style={styles.childName}>Noah Smith</ThemedText>
+              <ThemedText style={styles.childAge}>8 years old</ThemedText>
             </View>
           </View>
           <View>
-            <ThemedText style={styles.accountBalance}>$535.15</ThemedText>
+            <ThemedText style={styles.childBalance}>$75.25</ThemedText>
             <ThemedText style={styles.availableText}>Available</ThemedText>
           </View>
         </TouchableOpacity>
 
-        {/* Savings Goals Section */}
-        <View style={styles.sectionHeader}>
-          <ThemedText style={styles.sectionTitle}>Savings Goals</ThemedText>
-          <TouchableOpacity>
-            <ThemedText style={styles.seeAllText}>See All</ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Laptop Goal */}
-        <TouchableOpacity style={styles.goalCard}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.accountIcon, { backgroundColor: '#F9F0FF' }]}>
-              <Ionicons name="laptop-outline" size={24} color="#9C27B0" />
-            </View>
-            <View>
-              <ThemedText style={styles.accountName}>New Laptop</ThemedText>
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBar, { width: '100%' }]} />
-              </View>
-            </View>
-          </View>
-          <View>
-            <ThemedText style={styles.accountBalance}>$479.00</ThemedText>
-            <ThemedText style={styles.goalComplete}>Completed!</ThemedText>
-          </View>
-        </TouchableOpacity>
-
-        {/* Vacation Goal */}
-        <TouchableOpacity style={styles.goalCard}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.accountIcon, { backgroundColor: '#FFF8E1' }]}>
-              <Ionicons name="airplane-outline" size={24} color="#FFC107" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <ThemedText style={styles.accountName}>Summer Vacation</ThemedText>
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBar, { width: '45%' }]} />
-              </View>
-            </View>
-          </View>
-          <View>
-            <ThemedText style={styles.accountBalance}>$450/$1000</ThemedText>
-            <ThemedText style={styles.availableText}>45% saved</ThemedText>
-          </View>
+        {/* Add Child Button */}
+        <TouchableOpacity 
+          style={styles.addChildButton}
+          onPress={() => router.push('/(tabs)/family')}
+        >
+          <Ionicons name="add-circle-outline" size={22} color={BRAND_COLORS.secondary} />
+          <ThemedText style={styles.addChildText}>Add a Child</ThemedText>
         </TouchableOpacity>
 
         {/* Recent Transactions */}
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionTitle}>Recent Transactions</ThemedText>
-          <TouchableOpacity>
-            <ThemedText style={styles.seeAllText}>See All</ThemedText>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/wallet')}>
+            <ThemedText style={[styles.seeAllText, { color: BRAND_COLORS.secondary }]}>See All</ThemedText>
           </TouchableOpacity>
         </View>
 
         {/* Transaction 1 */}
         <View style={styles.transactionItem}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.transactionIcon, { backgroundColor: '#FFEBEE' }]}>
-              <Ionicons name="fast-food-outline" size={20} color="#F44336" />
+          <View style={styles.transactionLeftSection}>
+            <View style={[styles.transactionIcon, { backgroundColor: '#FFF8E1' }]}>
+              <Ionicons name="people-outline" size={20} color={BRAND_COLORS.secondary} />
             </View>
             <View>
-              <ThemedText style={styles.transactionName}>Burger King</ThemedText>
-              <ThemedText style={styles.transactionDate}>Today, 2:34 PM</ThemedText>
+              <ThemedText style={styles.transactionName}>Transfer to Emma</ThemedText>
+              <ThemedText style={styles.transactionDate}>Today, 4:15 PM</ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.transactionAmount}>-$12.40</ThemedText>
+          <ThemedText style={styles.transactionAmount}>-$50.00</ThemedText>
         </View>
 
         {/* Transaction 2 */}
         <View style={styles.transactionItem}>
-          <View style={styles.accountLeftSection}>
+          <View style={styles.transactionLeftSection}>
             <View style={[styles.transactionIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="arrow-down" size={20} color="#4CAF50" />
+              <Ionicons name="arrow-up" size={20} color={BRAND_COLORS.positive} />
             </View>
             <View>
-              <ThemedText style={styles.transactionName}>Allowance</ThemedText>
+              <ThemedText style={styles.transactionName}>Added to Wallet</ThemedText>
               <ThemedText style={styles.transactionDate}>Yesterday, 9:00 AM</ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.incomeAmount}>+$50.00</ThemedText>
+          <ThemedText style={styles.incomeAmount}>+$200.00</ThemedText>
         </View>
 
         {/* Transaction 3 */}
         <View style={styles.transactionItem}>
-          <View style={styles.accountLeftSection}>
-            <View style={[styles.transactionIcon, { backgroundColor: '#E0F7FA' }]}>
-              <Ionicons name="musical-notes-outline" size={20} color="#00BCD4" />
+          <View style={styles.transactionLeftSection}>
+            <View style={[styles.transactionIcon, { backgroundColor: '#FFF8E1' }]}>
+              <Ionicons name="people-outline" size={20} color={BRAND_COLORS.secondary} />
             </View>
             <View>
-              <ThemedText style={styles.transactionName}>Spotify</ThemedText>
-              <ThemedText style={styles.transactionDate}>Jan 15, 10:22 AM</ThemedText>
+              <ThemedText style={styles.transactionName}>Transfer to Noah</ThemedText>
+              <ThemedText style={styles.transactionDate}>Jan 15, 3:30 PM</ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.transactionAmount}>-$9.99</ThemedText>
+          <ThemedText style={styles.transactionAmount}>-$30.00</ThemedText>
         </View>
 
         {/* Add space at the bottom for tab bar */}
@@ -237,55 +211,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16
   },
   balanceContainer: {
-    backgroundColor: '#5BCFB8',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
-    marginBottom: 20
+    marginBottom: 24
   },
   balanceLabel: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 5
+    color: BRAND_COLORS.darkText,
+    marginBottom: 8
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10
+    color: BRAND_COLORS.darkText,
+    marginBottom: 8
   },
-  growthContainer: {
+  viewDetailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: 'flex-start'
   },
-  growthText: {
-    marginLeft: 4,
+  viewDetailsText: {
     fontSize: 14,
-    color: '#FFFFFF'
+    fontWeight: '500',
+    color: BRAND_COLORS.secondary,
+    marginRight: 4,
   },
   quickActionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24
+    justifyContent: 'space-around',
+    marginBottom: 32
   },
   quickActionButton: {
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1
   },
   actionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8
   },
   actionText: {
     fontSize: 12,
-    color: '#666666'
+    color: '#555555'
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -295,96 +265,77 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333333'
   },
   seeAllText: {
     fontSize: 14,
-    color: '#5BCFB8'
+    fontWeight: '500'
   },
-  accountCard: {
+  childCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    // Shadow for Android
+    shadowRadius: 4,
     elevation: 2
   },
-  goalCard: {
+  childLeftSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    // Shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2
+    alignItems: 'center'
   },
-  accountLeftSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1
-  },
-  accountIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  childAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12
   },
-  accountName: {
+  childName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333333',
     marginBottom: 4
   },
-  accountNumber: {
-    fontSize: 13,
-    color: '#999999'
+  childAge: {
+    fontSize: 12,
+    color: '#777777'
   },
-  accountBalance: {
+  childBalance: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#333333',
-    textAlign: 'right'
+    fontWeight: 'bold',
+    color: BRAND_COLORS.secondary,
+    textAlign: 'right',
+    marginBottom: 4
   },
   availableText: {
     fontSize: 12,
-    color: '#999999',
+    color: '#777777',
     textAlign: 'right'
   },
-  goalComplete: {
-    fontSize: 12,
-    color: '#4CAF50',
-    textAlign: 'right',
+  addChildButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#DDDDDD',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 32
+  },
+  addChildText: {
+    marginLeft: 8,
+    color: BRAND_COLORS.secondary,
     fontWeight: '500'
-  },
-  progressBarContainer: {
-    height: 4,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 2,
-    overflow: 'hidden',
-    width: '100%',
-    marginTop: 4
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#5BCFB8',
-    borderRadius: 2
   },
   transactionItem: {
     flexDirection: 'row',
@@ -393,6 +344,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0'
+  },
+  transactionLeftSection: {
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   transactionIcon: {
     width: 36,
@@ -403,23 +358,23 @@ const styles = StyleSheet.create({
     marginRight: 12
   },
   transactionName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#333333'
+    color: '#333333',
+    marginBottom: 4
   },
   transactionDate: {
-    fontSize: 13,
-    color: '#999999',
-    marginTop: 2
+    fontSize: 12,
+    color: '#777777'
   },
   transactionAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#F44336'
+    color: BRAND_COLORS.negative
   },
   incomeAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#4CAF50'
-  }
+    color: BRAND_COLORS.positive
+  },
 });
