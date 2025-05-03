@@ -130,6 +130,119 @@ export interface NotificationItem {
   relatedId?: string;
 }
 
+// Educational Videos
+export interface FinanceVideo {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  duration: string;
+  likes: number;
+  views: number;
+  tags: string[];
+  forAgeGroups: number[]; // E.g., [8, 9, 10, 11, 12] for videos suitable for ages 8-12
+}
+
+export const financeVideos: FinanceVideo[] = [
+  {
+    id: 'v1',
+    title: 'What is Money?',
+    description: 'Learn the basics of money - what it is, where it comes from, and why we use it!',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=What+is+Money',
+    videoUrl: 'https://example.com/videos/what-is-money',
+    duration: '2:30',
+    likes: 1254,
+    views: 5628,
+    tags: ['basics', 'money', 'beginners'],
+    forAgeGroups: [6, 7, 8, 9, 10]
+  },
+  {
+    id: 'v2',
+    title: 'Saving vs. Spending',
+    description: 'Why is it important to save? Learn about the difference between saving and spending money.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=Saving+vs+Spending',
+    videoUrl: 'https://example.com/videos/saving-vs-spending',
+    duration: '3:15',
+    likes: 987,
+    views: 4321,
+    tags: ['saving', 'spending', 'budgeting'],
+    forAgeGroups: [8, 9, 10, 11, 12]
+  },
+  {
+    id: 'v3',
+    title: 'What are Stocks?',
+    description: 'Learn how stocks work and why companies sell them. Explained for kids!',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=What+Are+Stocks',
+    videoUrl: 'https://example.com/videos/stocks-for-kids',
+    duration: '2:45',
+    likes: 756,
+    views: 3892,
+    tags: ['investing', 'stocks', 'advanced'],
+    forAgeGroups: [10, 11, 12, 13, 14]
+  },
+  {
+    id: 'v4',
+    title: 'Setting Money Goals',
+    description: 'How to set financial goals and save up for something you really want.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=Setting+Money+Goals',
+    videoUrl: 'https://example.com/videos/setting-money-goals',
+    duration: '2:20',
+    likes: 1089,
+    views: 4723,
+    tags: ['goals', 'saving', 'planning'],
+    forAgeGroups: [7, 8, 9, 10, 11, 12]
+  },
+  {
+    id: 'v5',
+    title: 'What is Interest?',
+    description: 'Learn how interest works and why it helps your money grow when you save.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=What+Is+Interest',
+    videoUrl: 'https://example.com/videos/interest-explained',
+    duration: '3:05',
+    likes: 842,
+    views: 3678,
+    tags: ['interest', 'saving', 'advanced'],
+    forAgeGroups: [9, 10, 11, 12, 13]
+  },
+  {
+    id: 'v6',
+    title: 'What is a Budget?',
+    description: 'Learn how to make a simple budget and track your money.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=What+Is+A+Budget',
+    videoUrl: 'https://example.com/videos/budgeting-basics',
+    duration: '2:50',
+    likes: 976,
+    views: 4102,
+    tags: ['budgeting', 'planning', 'basics'],
+    forAgeGroups: [8, 9, 10, 11, 12]
+  },
+  {
+    id: 'v7',
+    title: 'Needs vs. Wants',
+    description: 'Understanding the difference between things you need and things you want.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=Needs+vs+Wants',
+    videoUrl: 'https://example.com/videos/needs-vs-wants',
+    duration: '2:15',
+    likes: 1324,
+    views: 5876,
+    tags: ['basics', 'spending', 'decisions'],
+    forAgeGroups: [6, 7, 8, 9, 10]
+  },
+  {
+    id: 'v8',
+    title: 'How Banks Work',
+    description: 'What do banks do with your money? Learn how banks keep your money safe.',
+    thumbnailUrl: 'https://via.placeholder.com/400x600.png?text=How+Banks+Work',
+    videoUrl: 'https://example.com/videos/banks-explained',
+    duration: '3:30',
+    likes: 763,
+    views: 3421,
+    tags: ['banks', 'saving', 'intermediate'],
+    forAgeGroups: [8, 9, 10, 11, 12]
+  }
+];
+
 // Mock user data (parents and children)
 export const users: User[] = [
   {
@@ -680,4 +793,19 @@ export const getInvestmentsByChildId = (childId: string): Investment[] => {
   }
   // If not, check the mock investments
   return mockInvestments.filter(investment => investment.childId === childId);
+};
+
+// Function to get videos
+export const getFinanceVideos = () => {
+  return financeVideos;
+};
+
+// Function to get video by ID
+export const getFinanceVideoById = (videoId: string): FinanceVideo | undefined => {
+  return financeVideos.find(video => video.id === videoId);
+};
+
+// Function to get videos by age group
+export const getFinanceVideosByAge = (age: number): FinanceVideo[] => {
+  return financeVideos.filter(video => video.forAgeGroups.includes(age));
 }; 

@@ -49,6 +49,16 @@ export default function ChildTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="videos"
+        options={{
+          title: 'Learn',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="videocam" size={size} color={color} />
+          ),
+          headerTitle: 'Finance Videos',
+        }}
+      />
+      <Tabs.Screen
         name="chores"
         options={{
           title: 'Chores',
