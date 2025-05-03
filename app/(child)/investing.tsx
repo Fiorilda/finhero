@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     FlatList,
-    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -11,7 +10,7 @@ import {
     View
 } from 'react-native';
 
-import { Investment, getInvestmentsByChildId } from '@/app/mock-data';
+import { Child, Investment, getChildById, getInvestmentsByChildId } from '@/app/mock-data';
 
 // Raiffeisen Bank brand colors
 const BRAND_COLORS = {
@@ -19,188 +18,235 @@ const BRAND_COLORS = {
   secondary: '#004E9E', // Raiffeisen Blue
   lightGray: '#AAAAAA',
   positive: '#4CAF50',
+  negative: '#F44336',
   teal: '#37a69b',
+  purple: '#8E44AD',
 };
 
-// Using mock child ID until we have auth
+// Mock child ID until we have auth
 const MOCK_CHILD_ID = 'c1';
 
 export default function InvestingScreen() {
   const router = useRouter();
+  const [childData, setChildData] = useState<Child | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadInvestments();
+    // Load child data
+    const child = getChildById(MOCK_CHILD_ID);
+    if (child) {
+      setChildData(child);
+      
+      // Load investments
+      const childInvestments = getInvestmentsByChildId(MOCK_CHILD_ID);
+      setInvestments(childInvestments);
+    }
   }, []);
 
-  const loadInvestments = () => {
-    const childInvestments = getInvestmentsByChildId(MOCK_CHILD_ID);
-    setInvestments(childInvestments);
+  if (!childData || !childData.accounts.investing) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Calculate total investment value and gain/loss
+  const totalInvested = investments.reduce(
+    (sum, investment) => sum + (investment.shares * investment.purchasePrice),
+    0
+  );
+  
+  const currentValue = investments.reduce(
+    (sum, investment) => sum + (investment.shares * investment.currentPrice),
+    0
+  );
+  
+  const totalGainLoss = currentValue - totalInvested;
+  const percentageChange = (totalGainLoss / totalInvested) * 100;
+
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toFixed(2)}`;
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadInvestments();
-    setTimeout(() => setRefreshing(false), 1000);
+  // Format percentage with + or - sign
+  const formatPercentage = (percentage: number) => {
+    const sign = percentage >= 0 ? '+' : '';
+    return `${sign}${percentage.toFixed(2)}%`;
   };
 
+  // Format date to friendly format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Render an investment item
   const renderInvestmentItem = ({ item }: { item: Investment }) => {
-    const currentValue = item.shares * item.currentPrice;
-    const purchaseValue = item.shares * item.purchasePrice;
-    const profitLoss = currentValue - purchaseValue;
-    const profitLossPercent = (profitLoss / purchaseValue) * 100;
-    const isProfit = profitLoss >= 0;
+    const currentInvestmentValue = item.shares * item.currentPrice;
+    const originalInvestmentValue = item.shares * item.purchasePrice;
+    const investmentGainLoss = currentInvestmentValue - originalInvestmentValue;
+    const investmentPercentageChange = (investmentGainLoss / originalInvestmentValue) * 100;
+    const isPositive = investmentGainLoss >= 0;
     
     return (
-      <TouchableOpacity style={styles.investmentCard}>
+      <View style={styles.investmentItem}>
         <View style={styles.investmentHeader}>
-          <View style={styles.companyInfo}>
-            <View style={styles.logoPlaceholder}>
-              <Text style={styles.logoText}>{item.symbol}</Text>
-            </View>
-            <View>
-              <Text style={styles.stockSymbol}>{item.symbol}</Text>
-              <Text style={styles.companyName}>{item.name}</Text>
-            </View>
+          <View style={styles.symbolContainer}>
+            <Text style={styles.symbol}>{item.symbol}</Text>
           </View>
-          <View style={styles.stockPerformance}>
-            <Text 
-              style={[
-                styles.performancePercent,
-                isProfit ? styles.profitText : styles.lossText
-              ]}
-            >
-              {isProfit ? '+' : ''}{profitLossPercent.toFixed(2)}%
+          <View style={styles.investmentInfo}>
+            <Text style={styles.investmentName}>{item.name}</Text>
+            <Text style={styles.sharesInfo}>{item.shares} shares</Text>
+          </View>
+          <View style={styles.priceInfo}>
+            <Text style={styles.currentPrice}>{formatCurrency(item.currentPrice)}</Text>
+            <Text style={[
+              styles.priceChange, 
+              { color: isPositive ? BRAND_COLORS.positive : BRAND_COLORS.negative }
+            ]}>
+              {isPositive ? '+' : ''}{formatCurrency(investmentGainLoss)} ({formatPercentage(investmentPercentageChange)})
             </Text>
-            <View style={styles.trendIconContainer}>
-              <Ionicons 
-                name={isProfit ? "trending-up" : "trending-down"} 
-                size={16} 
-                color={isProfit ? BRAND_COLORS.positive : '#F44336'} 
-              />
-            </View>
           </View>
         </View>
         
         <View style={styles.investmentDetails}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Shares</Text>
-            <Text style={styles.detailValue}>{item.shares}</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Purchased:</Text>
+            <Text style={styles.detailValue}>{formatDate(item.purchaseDate)}</Text>
           </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Price</Text>
-            <Text style={styles.detailValue}>${item.currentPrice.toFixed(2)}</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Purchase Price:</Text>
+            <Text style={styles.detailValue}>{formatCurrency(item.purchasePrice)}</Text>
           </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Value</Text>
-            <Text style={styles.detailValue}>${currentValue.toFixed(2)}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.performanceContainer}>
-          <View style={styles.performanceHeader}>
-            <Text style={styles.performanceLabel}>Performance</Text>
-            <Text 
-              style={[
-                styles.performanceValue,
-                isProfit ? styles.profitText : styles.lossText
-              ]}
-            >
-              {isProfit ? '+' : ''}{profitLoss.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.investmentActions}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>Learn More</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.tradeButton]}>
-              <Text style={styles.tradeButtonText}>Trade</Text>
-            </TouchableOpacity>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Current Value:</Text>
+            <Text style={styles.detailValue}>{formatCurrency(currentInvestmentValue)}</Text>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContentContainer}
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[BRAND_COLORS.secondary]}
-            tintColor={BRAND_COLORS.secondary}
-            progressViewOffset={10}
-          />
-        }
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>My Investments</Text>
-          <TouchableOpacity style={styles.exploreButton}>
-            <Ionicons name="search" size={18} color="#FFFFFF" />
-            <Text style={styles.exploreButtonText}>Explore</Text>
+      {/* Header with account balance */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={styles.balanceContainer}>
+          <Text style={styles.balanceLabel}>Investing Account</Text>
+          <Text style={styles.balanceAmount}>{formatCurrency(currentValue)}</Text>
+          <View style={styles.changeContainer}>
+            <Text style={[
+              styles.changeText, 
+              { color: totalGainLoss >= 0 ? '#FFFFFF' : '#FFCCCC' }
+            ]}>
+              {formatCurrency(totalGainLoss)} ({formatPercentage(percentageChange)})
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+        {/* Quick actions */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="search" size={24} color={BRAND_COLORS.purple} />
+            </View>
+            <Text style={styles.actionText}>Research</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="trending-up" size={24} color={BRAND_COLORS.purple} />
+            </View>
+            <Text style={styles.actionText}>Buy</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="trending-down" size={24} color={BRAND_COLORS.purple} />
+            </View>
+            <Text style={styles.actionText}>Sell</Text>
           </TouchableOpacity>
         </View>
-        
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryLeft}>
-            <Text style={styles.portfolioLabel}>Portfolio Value</Text>
-            <Text style={styles.portfolioValue}>
-              ${investments.reduce((sum, inv) => sum + (inv.shares * inv.currentPrice), 0).toFixed(2)}
-            </Text>
-            <View style={styles.performanceSummary}>
-              <Ionicons name="trending-up" size={14} color={BRAND_COLORS.positive} />
-              <Text style={styles.performanceSummaryText}>+3.24%</Text>
-              <Text style={styles.performancePeriod}>this week</Text>
+
+        {/* Portfolio Summary */}
+        <View style={styles.summaryContainer}>
+          <Text style={styles.sectionTitle}>Portfolio Summary</Text>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total Invested</Text>
+              <Text style={styles.summaryValue}>{formatCurrency(totalInvested)}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Current Value</Text>
+              <Text style={styles.summaryValue}>{formatCurrency(currentValue)}</Text>
             </View>
           </View>
-          <View style={styles.summaryRight}>
-            {/* Simple chart placeholder */}
-            <View style={styles.chartPlaceholder}>
-              <View style={styles.chart}>
-                <View style={styles.chartBar} />
-                <View style={[styles.chartBar, { height: 15 }]} />
-                <View style={[styles.chartBar, { height: 10 }]} />
-                <View style={[styles.chartBar, { height: 25 }]} />
-                <View style={[styles.chartBar, { height: 20 }]} />
-              </View>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total Gain/Loss</Text>
+              <Text style={[
+                styles.summaryValue, 
+                { color: totalGainLoss >= 0 ? BRAND_COLORS.positive : BRAND_COLORS.negative }
+              ]}>
+                {formatCurrency(totalGainLoss)}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Return</Text>
+              <Text style={[
+                styles.summaryValue, 
+                { color: percentageChange >= 0 ? BRAND_COLORS.positive : BRAND_COLORS.negative }
+              ]}>
+                {formatPercentage(percentageChange)}
+              </Text>
             </View>
           </View>
         </View>
-        
-        {investments.length > 0 ? (
+
+        {/* Investments List */}
+        <View style={styles.investmentsContainer}>
+          <Text style={styles.sectionTitle}>Your Investments</Text>
+          
           <FlatList
             data={investments}
             renderItem={renderInvestmentItem}
             keyExtractor={item => item.id}
             scrollEnabled={false}
-            contentContainerStyle={styles.investmentsList}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No investments yet</Text>
+              </View>
+            }
           />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="trending-up-outline" size={60} color="#CCCCCC" />
-            <Text style={styles.emptyText}>No investments yet</Text>
-            <Text style={styles.emptySubtext}>Explore stocks to start investing</Text>
-            <TouchableOpacity style={styles.exploreStocksButton}>
-              <Text style={styles.exploreStocksText}>Explore Stocks</Text>
-            </TouchableOpacity>
+        </View>
+
+        {/* Learning Section */}
+        <View style={styles.learningContainer}>
+          <View style={styles.learningHeader}>
+            <Ionicons name="school" size={24} color="#FF9800" />
+            <Text style={styles.learningTitle}>Investment Tips</Text>
           </View>
-        )}
-        
-        <View style={styles.tipsContainer}>
-          <View style={styles.tipHeader}>
-            <Ionicons name="bulb" size={20} color="#FF9800" />
-            <Text style={styles.tipTitle}>Investing Tips</Text>
-          </View>
-          <Text style={styles.tipText}>
-            Investing is a long-term commitment. Learn about companies before investing, and remember to diversify your portfolio.
+          
+          <Text style={styles.learningText}>
+            Investing is a long-term strategy. Markets go up and down, but historically, 
+            they tend to rise over time. Stay patient and keep learning!
           </Text>
+          
+          <TouchableOpacity style={styles.learnMoreButton}>
+            <Text style={styles.learnMoreText}>Learn More</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -212,286 +258,236 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F8F8',
   },
-  scrollContainer: {
+  header: {
+    backgroundColor: BRAND_COLORS.purple,
+    padding: 24,
+    paddingTop: 60,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+  },
+  balanceContainer: {
+    alignItems: 'center',
+  },
+  balanceLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    marginBottom: 4,
+  },
+  balanceAmount: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  changeContainer: {
+    marginTop: 4,
+  },
+  changeText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  contentContainer: {
     flex: 1,
   },
-  scrollContentContainer: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  header: {
+  actionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  exploreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: BRAND_COLORS.secondary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  exploreButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  summaryCard: {
+    justifyContent: 'space-around',
+    padding: 20,
     backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: -20,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  actionButton: {
+    alignItems: 'center',
+  },
+  actionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  actionText: {
+    fontSize: 12,
+    color: '#333333',
+  },
+  summaryContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    margin: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  summaryRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  summaryLeft: {
-    flex: 2,
+  summaryItem: {
+    width: '48%',
   },
-  portfolioLabel: {
+  summaryLabel: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 4,
   },
-  portfolioValue: {
-    fontSize: 24,
+  summaryValue: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 8,
   },
-  performanceSummary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  performanceSummaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: BRAND_COLORS.positive,
-    marginLeft: 4,
-    marginRight: 6,
-  },
-  performancePeriod: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  summaryRight: {
-    flex: 1,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  chartPlaceholder: {
-    width: 80,
-    height: 50,
-    justifyContent: 'flex-end',
-  },
-  chart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: '100%',
-  },
-  chartBar: {
-    width: 8,
-    height: 30,
-    backgroundColor: BRAND_COLORS.positive,
-    borderRadius: 2,
-    opacity: 0.7,
-  },
-  investmentsList: {
-    gap: 12,
-  },
-  investmentCard: {
+  investmentsContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
+    margin: 16,
+    marginTop: 0,
     padding: 16,
-    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
+  investmentItem: {
+    paddingVertical: 12,
+  },
   investmentHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  companyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F2F2F2',
+  symbolContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: BRAND_COLORS.purple + '20', // 20% opacity
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  logoText: {
+  symbol: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: BRAND_COLORS.secondary,
+    color: BRAND_COLORS.purple,
   },
-  stockSymbol: {
+  investmentInfo: {
+    flex: 1,
+  },
+  investmentName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 2,
+  },
+  sharesInfo: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  priceInfo: {
+    alignItems: 'flex-end',
+  },
+  currentPrice: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333333',
+    marginBottom: 2,
   },
-  companyName: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  stockPerformance: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  performancePercent: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 4,
-  },
-  profitText: {
-    color: BRAND_COLORS.positive,
-  },
-  lossText: {
-    color: '#F44336',
-  },
-  trendIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F8F8F8',
-    alignItems: 'center',
-    justifyContent: 'center',
+  priceChange: {
+    fontSize: 12,
   },
   investmentDetails: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    marginLeft: 62, // To align with the content after the icon
+  },
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
-    marginBottom: 12,
-  },
-  detailItem: {
-    alignItems: 'center',
+    marginBottom: 4,
   },
   detailLabel: {
     fontSize: 12,
     color: '#666666',
-    marginBottom: 4,
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 12,
     color: '#333333',
-  },
-  performanceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  performanceHeader: {
-    flexDirection: 'column',
-  },
-  performanceLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 2,
-  },
-  performanceValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  investmentActions: {
-    flexDirection: 'row',
-  },
-  actionButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#F5F5F5',
-    marginLeft: 8,
-  },
-  actionButtonText: {
-    fontSize: 12,
     fontWeight: '500',
-    color: '#666666',
   },
-  tradeButton: {
-    backgroundColor: 'rgba(55, 166, 155, 0.15)',
-  },
-  tradeButtonText: {
-    color: BRAND_COLORS.teal,
-    fontWeight: '600',
+  separator: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
   },
   emptyContainer: {
+    padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 40,
-    marginVertical: 20,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 24,
-    textAlign: 'center',
+    color: '#999999',
   },
-  exploreStocksButton: {
-    backgroundColor: BRAND_COLORS.secondary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  exploreStocksText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  tipsContainer: {
+  learningContainer: {
     backgroundColor: '#FFF8E1',
     borderRadius: 12,
+    margin: 16,
+    marginTop: 0,
+    padding: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#FF9800',
-    padding: 16,
-    marginTop: 16,
   },
-  tipHeader: {
+  learningHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  tipTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  learningTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#333333',
     marginLeft: 8,
   },
-  tipText: {
+  learningText: {
     fontSize: 14,
     color: '#666666',
     lineHeight: 20,
+    marginBottom: 16,
+  },
+  learnMoreButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  learnMoreText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 }); 

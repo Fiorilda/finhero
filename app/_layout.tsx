@@ -38,7 +38,7 @@ const useAuth = () => {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
   
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -53,12 +53,17 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          // Show app screens when authenticated
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          // Show appropriate screens based on user role
+          userRole === 'parent' ? (
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          ) : (
+            <Stack.Screen name="(child)" options={{ headerShown: false }} />
+          )
         ) : (
           // Show auth screens when not authenticated
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         )}
+        <Stack.Screen name="(child)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

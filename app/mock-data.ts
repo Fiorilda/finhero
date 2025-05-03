@@ -669,4 +669,15 @@ let savingsGoals: SavingsGoal[] = [
     currentAmount: 10,
     childId: 'c2',
   },
-]; 
+];
+
+// Function to get investments by child ID
+export const getInvestmentsByChildId = (childId: string): Investment[] => {
+  // Check if child has investments in their account
+  const child = children.find(c => c.id === childId);
+  if (child?.accounts.investing?.investments) {
+    return child.accounts.investing.investments;
+  }
+  // If not, check the mock investments
+  return mockInvestments.filter(investment => investment.childId === childId);
+}; 

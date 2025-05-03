@@ -7,6 +7,7 @@ import {
     RefreshControl,
     ScrollView,
     StyleSheet,
+    Text,
     TouchableOpacity,
     View
 } from 'react-native';
@@ -14,10 +15,9 @@ import {
 import {
     Child,
     Transaction,
-    children,
+    getChildById,
     getTransactionsByUserId
 } from '@/app/mock-data';
-import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
 const BRAND_COLORS = {
@@ -25,10 +25,11 @@ const BRAND_COLORS = {
   secondary: '#004E9E', // Raiffeisen Blue
   lightGray: '#AAAAAA',
   positive: '#4CAF50',
+  negative: '#F44336',
   teal: '#37a69b',
 };
 
-// Using mock child ID until we have auth
+// Mock child ID until we have auth
 const MOCK_CHILD_ID = 'c1';
 
 export default function ChildMoneyScreen() {
@@ -39,13 +40,15 @@ export default function ChildMoneyScreen() {
   const [activeTab, setActiveTab] = useState('all');
 
   const loadData = () => {
-    // Get child data
-    const child = children.find(c => c.id === MOCK_CHILD_ID);
-    if (child) setChildData(child);
-
-    // Get transactions
-    const childTransactions = getTransactionsByUserId(MOCK_CHILD_ID);
-    setTransactions(childTransactions);
+    // Load child data
+    const child = getChildById(MOCK_CHILD_ID);
+    if (child) {
+      setChildData(child);
+      
+      // Load transactions
+      const childTransactions = getTransactionsByUserId(MOCK_CHILD_ID);
+      setTransactions(childTransactions);
+    }
   };
 
   useEffect(() => {
@@ -61,55 +64,72 @@ export default function ChildMoneyScreen() {
   if (!childData) {
     return (
       <View style={styles.centerContent}>
-        <ThemedText>Loading...</ThemedText>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
-  // Calculate balances
+  const totalBalance = childData.accounts.spending.balance + 
+                       childData.accounts.savings.balance + 
+                       (childData.accounts.investing?.balance || 0);
+
   const spendingBalance = childData.accounts.spending.balance;
   const savingsBalance = childData.accounts.savings.balance;
   const investingBalance = childData.accounts.investing?.balance || 0;
-  const totalBalance = spendingBalance + savingsBalance + investingBalance;
 
-  // Filter transactions based on active tab
-  const filteredTransactions = transactions.filter(tx => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'in' && 
-        (tx.type === 'allowance' || tx.type === 'chore' || tx.type === 'deposit')) return true;
-    if (activeTab === 'out' && 
-        (tx.type === 'payment' || tx.type === 'withdrawal')) return true;
-    return false;
-  });
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toFixed(2)}`;
+  };
 
-  const renderTransactionItem = ({ item }: { item: Transaction }) => (
-    <TouchableOpacity style={styles.transactionItem}>
-      <View style={styles.transactionIconContainer}>
-        {item.type === 'allowance' && <Ionicons name="cash" size={20} color={BRAND_COLORS.positive} />}
-        {item.type === 'chore' && <Ionicons name="checkbox" size={20} color={BRAND_COLORS.teal} />}
-        {item.type === 'deposit' && <Ionicons name="arrow-down" size={20} color={BRAND_COLORS.positive} />}
-        {item.type === 'payment' && <Ionicons name="cart" size={20} color="#F44336" />}
-        {item.type === 'transfer' && <Ionicons name="swap-horizontal" size={20} color={BRAND_COLORS.secondary} />}
-        {item.type === 'withdrawal' && <Ionicons name="arrow-up" size={20} color="#F44336" />}
+  // Format date to friendly format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Get transaction icon based on type
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'arrow-down-circle';
+      case 'withdrawal':
+        return 'arrow-up-circle';
+      case 'transfer':
+        return 'swap-horizontal';
+      case 'payment':
+        return 'cart';
+      case 'allowance':
+        return 'calendar';
+      case 'chore':
+        return 'checkbox';
+      default:
+        return 'help-circle';
+    }
+  };
+
+  // Render a transaction item
+  const renderTransactionItem = ({ item }: { item: Transaction }) => {
+    const isIncome = ['deposit', 'allowance', 'chore'].includes(item.type);
+    
+    return (
+      <View style={styles.transactionItem}>
+        <View style={[styles.transactionIcon, { backgroundColor: isIncome ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)' }]}>
+          <Ionicons 
+            name={getTransactionIcon(item.type)} 
+            size={20} 
+            color={isIncome ? BRAND_COLORS.positive : BRAND_COLORS.negative} 
+          />
+        </View>
+        <View style={styles.transactionInfo}>
+          <Text style={styles.transactionDescription}>{item.description}</Text>
+          <Text style={styles.transactionDate}>{formatDate(item.date)}</Text>
+        </View>
+        <Text style={[styles.transactionAmount, { color: isIncome ? BRAND_COLORS.positive : BRAND_COLORS.negative }]}>
+          {isIncome ? '+' : '-'}{formatCurrency(item.amount)}
+        </Text>
       </View>
-      <View style={styles.transactionContent}>
-        <ThemedText style={styles.transactionDescription}>{item.description}</ThemedText>
-        <ThemedText style={styles.transactionDate}>
-          {new Date(item.date).toLocaleDateString()}
-        </ThemedText>
-      </View>
-      <ThemedText 
-        style={[
-          styles.transactionAmount,
-          item.type === 'payment' || item.type === 'withdrawal' 
-            ? styles.negativeAmount 
-            : styles.positiveAmount
-        ]}
-      >
-        {item.type === 'payment' || item.type === 'withdrawal' ? '-' : '+'}${item.amount.toFixed(2)}
-      </ThemedText>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -128,56 +148,53 @@ export default function ChildMoneyScreen() {
           />
         }
       >
-        {/* Balance Card */}
-        <View style={styles.balanceCard}>
-          <ThemedText style={styles.balanceTitle}>Total Balance</ThemedText>
-          <ThemedText style={styles.balanceAmount}>${totalBalance.toFixed(2)}</ThemedText>
-          
-          <View style={styles.accountCardsContainer}>
-            {/* Spending Account */}
-            <View style={[styles.accountCard, { backgroundColor: '#E3F2FD' }]}>
-              <View style={styles.accountIconContainer}>
-                <Ionicons name="card" size={24} color={BRAND_COLORS.secondary} />
-              </View>
-              <ThemedText style={styles.accountLabel}>Spending</ThemedText>
-              <ThemedText style={styles.accountBalance}>${spendingBalance.toFixed(2)}</ThemedText>
-              <TouchableOpacity style={styles.accountAction}>
-                <ThemedText style={styles.accountActionText}>View</ThemedText>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Savings Account */}
-            <View style={[styles.accountCard, { backgroundColor: '#E8F5E9' }]}>
-              <View style={styles.accountIconContainer}>
-                <Ionicons name="save" size={24} color={BRAND_COLORS.positive} />
-              </View>
-              <ThemedText style={styles.accountLabel}>Savings</ThemedText>
-              <ThemedText style={styles.accountBalance}>${savingsBalance.toFixed(2)}</ThemedText>
-              <TouchableOpacity 
-                style={styles.accountAction}
-                onPress={() => router.push('/(child)/goals')}
-              >
-                <ThemedText style={styles.accountActionText}>View Goals</ThemedText>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Investing Account (if exists) */}
-            {childData.accounts.investing && (
-              <View style={[styles.accountCard, { backgroundColor: '#FFF9C4' }]}>
-                <View style={styles.accountIconContainer}>
-                  <Ionicons name="trending-up" size={24} color="#FF9800" />
-                </View>
-                <ThemedText style={styles.accountLabel}>Investing</ThemedText>
-                <ThemedText style={styles.accountBalance}>${investingBalance.toFixed(2)}</ThemedText>
-                <TouchableOpacity 
-                  style={styles.accountAction}
-                  onPress={() => router.push('/(child)/investing')}
-                >
-                  <ThemedText style={styles.accountActionText}>View Stocks</ThemedText>
-                </TouchableOpacity>
-              </View>
-            )}
+        {/* Header with total balance */}
+        <View style={styles.header}>
+          <View style={styles.balanceContainer}>
+            <Text style={styles.balanceLabel}>Total Balance</Text>
+            <Text style={styles.balanceAmount}>{formatCurrency(totalBalance)}</Text>
           </View>
+        </View>
+        
+        {/* Account cards */}
+        <View style={styles.accountsContainer}>
+          {/* Spending account */}
+          <TouchableOpacity 
+            style={[styles.accountCard, { backgroundColor: BRAND_COLORS.secondary }]}
+            onPress={() => router.push('/spending')}
+          >
+            <View style={styles.accountHeader}>
+              <Ionicons name="card" size={24} color="#FFFFFF" />
+              <Text style={styles.accountType}>Spending</Text>
+            </View>
+            <Text style={styles.accountBalance}>{formatCurrency(spendingBalance)}</Text>
+          </TouchableOpacity>
+          
+          {/* Savings account */}
+          <TouchableOpacity 
+            style={[styles.accountCard, { backgroundColor: BRAND_COLORS.teal }]}
+            onPress={() => router.push('/goals')}
+          >
+            <View style={styles.accountHeader}>
+              <Ionicons name="save" size={24} color="#FFFFFF" />
+              <Text style={styles.accountType}>Savings</Text>
+            </View>
+            <Text style={styles.accountBalance}>{formatCurrency(savingsBalance)}</Text>
+          </TouchableOpacity>
+          
+          {/* Investing account (if available) */}
+          {childData.accounts.investing && (
+            <TouchableOpacity 
+              style={[styles.accountCard, { backgroundColor: '#8E44AD' }]}
+              onPress={() => router.push('/investing')}
+            >
+              <View style={styles.accountHeader}>
+                <Ionicons name="trending-up" size={24} color="#FFFFFF" />
+                <Text style={styles.accountType}>Investing</Text>
+              </View>
+              <Text style={styles.accountBalance}>{formatCurrency(investingBalance)}</Text>
+            </TouchableOpacity>
+          )}
         </View>
         
         {/* Action Buttons */}
@@ -186,27 +203,32 @@ export default function ChildMoneyScreen() {
             <View style={[styles.actionButtonIcon, { backgroundColor: '#E3F2FD' }]}>
               <Ionicons name="arrow-forward" size={20} color={BRAND_COLORS.secondary} />
             </View>
-            <ThemedText style={styles.actionButtonLabel}>Send Money</ThemedText>
+            <Text style={styles.actionButtonLabel}>Send Money</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton}>
             <View style={[styles.actionButtonIcon, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="add" size={20} color={BRAND_COLORS.positive} />
             </View>
-            <ThemedText style={styles.actionButtonLabel}>Add Money</ThemedText>
+            <Text style={styles.actionButtonLabel}>Add Money</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton}>
             <View style={[styles.actionButtonIcon, { backgroundColor: '#F5F5F5' }]}>
               <Ionicons name="settings-outline" size={20} color="#757575" />
             </View>
-            <ThemedText style={styles.actionButtonLabel}>Settings</ThemedText>
+            <Text style={styles.actionButtonLabel}>Settings</Text>
           </TouchableOpacity>
         </View>
         
         {/* Transactions Section */}
         <View style={styles.transactionsContainer}>
-          <ThemedText style={styles.sectionTitle}>Transactions</ThemedText>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
           
           {/* Transaction Filters */}
           <View style={styles.tabContainer}>
@@ -214,42 +236,47 @@ export default function ChildMoneyScreen() {
               style={[styles.tab, activeTab === 'all' && styles.activeTab]}
               onPress={() => setActiveTab('all')}
             >
-              <ThemedText style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
                 All
-              </ThemedText>
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.tab, activeTab === 'in' && styles.activeTab]}
               onPress={() => setActiveTab('in')}
             >
-              <ThemedText style={[styles.tabText, activeTab === 'in' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'in' && styles.activeTabText]}>
                 Money In
-              </ThemedText>
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.tab, activeTab === 'out' && styles.activeTab]}
               onPress={() => setActiveTab('out')}
             >
-              <ThemedText style={[styles.tabText, activeTab === 'out' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'out' && styles.activeTabText]}>
                 Money Out
-              </ThemedText>
+              </Text>
             </TouchableOpacity>
           </View>
           
           {/* Transaction List */}
-          {filteredTransactions.length > 0 ? (
+          {transactions.length > 0 ? (
             <FlatList
-              data={filteredTransactions}
+              data={transactions.slice(0, 5)} // Show only latest 5 transactions
               renderItem={renderTransactionItem}
               keyExtractor={item => item.id}
               scrollEnabled={false}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No transactions to display</Text>
+                </View>
+              }
             />
           ) : (
             <View style={styles.emptyContainer}>
-              <ThemedText style={styles.emptyText}>No transactions to display</ThemedText>
+              <Text style={styles.emptyText}>No transactions to display</Text>
             </View>
           )}
         </View>
@@ -279,72 +306,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  balanceCard: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  header: {
+    backgroundColor: BRAND_COLORS.primary,
+    padding: 24,
+    paddingTop: 40,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  balanceTitle: {
+  balanceContainer: {
+    alignItems: 'center',
+  },
+  balanceLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#666666',
-    marginBottom: 8,
+    color: '#333333',
+    marginBottom: 4,
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 16,
   },
-  accountCardsContainer: {
+  accountsContainer: {
+    padding: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
   accountCard: {
     width: '48%',
+    padding: 16,
     borderRadius: 12,
-    padding: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  accountHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  accountIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  accountLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
-    marginBottom: 4,
+  accountType: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
   accountBalance: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  accountAction: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    borderRadius: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    alignSelf: 'flex-start',
-  },
-  accountActionText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#666666',
+    color: '#FFFFFF',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -369,21 +382,30 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   transactionsContainer: {
-    marginHorizontal: 16,
-    padding: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    margin: 16,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 16,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: BRAND_COLORS.secondary,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -419,50 +441,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
-  transactionIconContainer: {
+  transactionIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  transactionContent: {
+  transactionInfo: {
     flex: 1,
   },
   transactionDescription: {
     fontSize: 14,
     fontWeight: '500',
     color: '#333333',
-    marginBottom: 4,
   },
   transactionDate: {
     fontSize: 12,
-    color: '#666666',
+    color: '#777777',
+    marginTop: 2,
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  positiveAmount: {
-    color: BRAND_COLORS.positive,
-  },
-  negativeAmount: {
-    color: '#F44336',
+    fontWeight: '600',
   },
   separator: {
     height: 1,
     backgroundColor: '#F0F0F0',
   },
   emptyContainer: {
+    padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
   },
   emptyText: {
     fontSize: 14,
-    color: '#888888',
-    fontStyle: 'italic',
+    color: '#999999',
   },
 }); 
