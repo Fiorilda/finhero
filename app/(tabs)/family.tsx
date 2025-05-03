@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -272,38 +273,57 @@ export default function FamilyScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Children</ThemedText>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <View style={styles.addChildButton}>
-            <Ionicons name="add" size={24} color="#FFFFFF" />
+      <HeaderWithBack title="Manage Children" />
+      
+      <View style={styles.content}>
+        <View style={styles.summary}>
+          <View style={styles.summaryCard}>
+            <ThemedText style={styles.summaryNumber}>{children.length}</ThemedText>
+            <ThemedText style={styles.summaryLabel}>Children</ThemedText>
           </View>
-        </TouchableOpacity>
-      </View>
-
-      <ThemedText style={styles.subtitle}>Manage your children's accounts (ages 12-17)</ThemedText>
-
-      <FlatList
-        data={children}
-        renderItem={renderChildItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.childrenList}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="people" size={60} color={BRAND_COLORS.lightGray} />
-            <ThemedText style={styles.emptyStateText}>
-              You haven't added any children yet
+          <View style={styles.summaryCard}>
+            <ThemedText style={styles.summaryNumber}>
+              {children.filter(child => child.isActive).length}
             </ThemedText>
+            <ThemedText style={styles.summaryLabel}>Active</ThemedText>
+          </View>
+          <View style={styles.summaryCard}>
+            <ThemedText style={styles.summaryNumber}>
+              {children.filter(child => !child.isActive).length}
+            </ThemedText>
+            <ThemedText style={styles.summaryLabel}>Inactive</ThemedText>
+          </View>
+        </View>
+
+        <FlatList
+          data={children}
+          renderItem={renderChildItem}
+          keyExtractor={item => item.id}
+          style={styles.childrenList}
+          contentContainerStyle={styles.childrenListContent}
+          ListHeaderComponent={
             <TouchableOpacity 
-              style={styles.emptyStateButton}
+              style={styles.addButton}
               onPress={() => setModalVisible(true)}
             >
-              <ThemedText style={styles.emptyStateButtonText}>Add a Child</ThemedText>
+              <Ionicons name="add-circle" size={24} color={BRAND_COLORS.secondary} />
+              <ThemedText style={styles.addButtonText}>Add a Child</ThemedText>
             </TouchableOpacity>
-          </View>
-        }
-      />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="people" size={60} color="#CCCCCC" />
+              <ThemedText style={styles.emptyStateText}>No children added yet</ThemedText>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => setModalVisible(true)}
+              >
+                <ThemedText style={styles.emptyStateButtonText}>Add Your First Child</ThemedText>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      </View>
 
       {/* Add Child Modal */}
       <Modal
@@ -499,38 +519,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
-  header: {
-    backgroundColor: BRAND_COLORS.primary,
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  summary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    padding: 16,
+  },
+  summaryCard: {
     alignItems: 'center',
   },
-  title: {
+  summaryNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: BRAND_COLORS.secondary,
   },
-  addChildButton: {
-    backgroundColor: BRAND_COLORS.secondary,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#555555',
-    marginTop: 20,
-    marginBottom: 20,
-    paddingHorizontal: 16,
+  summaryLabel: {
+    fontSize: 14,
+    color: '#777777',
   },
   childrenList: {
     paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  childrenListContent: {
     paddingBottom: 20,
   },
   childCard: {
@@ -807,5 +823,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
-  }
+  },
+  addButton: {
+    backgroundColor: BRAND_COLORS.secondary,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 }); 

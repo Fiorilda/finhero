@@ -2,19 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View
+    Alert,
+    Dimensions,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
 
 import { users } from '@/app/mock-data';
@@ -530,3 +530,4 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
 }); 
+ 

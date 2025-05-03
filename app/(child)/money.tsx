@@ -2,21 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import {
-    Child,
-    Transaction,
-    getChildById,
-    getTransactionsByUserId
+  Child,
+  Transaction,
+  getChildById,
+  getTransactionsByUserId
 } from '@/app/mock-data';
 
 // Raiffeisen Bank brand colors

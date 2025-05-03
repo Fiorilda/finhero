@@ -263,11 +263,17 @@ export default function VideosScreen() {
         keyExtractor={(item) => item.id}
         pagingEnabled
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+          minimumViewTime: 100
+        }}
         showsVerticalScrollIndicator={false}
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
         decelerationRate="fast"
+        scrollEventThrottle={16}
+        disableIntervalMomentum={true}
+        snapToOffsets={videos.map((_, index) => index * SCREEN_HEIGHT)}
         bounces={false}
         windowSize={3}
         initialNumToRender={1}

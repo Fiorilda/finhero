@@ -48,6 +48,16 @@ export default function ChildTabsLayout() {
           ),
         }}
       />
+        <Tabs.Screen
+        name="chores"
+        options={{
+          title: 'Chores',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkbox" size={size} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="videos"
         options={{
@@ -59,14 +69,16 @@ export default function ChildTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chores"
+        name="quizzes"
         options={{
-          title: 'Chores',
+          title: 'Quizzes',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkbox" size={size} color={color} />
+            <Ionicons name="school" size={size} color={color} />
           ),
+          headerTitle: 'Financial Quizzes',
         }}
       />
+{/*     
       <Tabs.Screen
         name="goals"
         options={{
@@ -75,8 +87,8 @@ export default function ChildTabsLayout() {
             <Ionicons name="flag" size={size} color={color} />
           ),
         }}
-      />
-      <Tabs.Screen
+      /> */}
+      {/* <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -84,7 +96,7 @@ export default function ChildTabsLayout() {
             <Ionicons name="person" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
     </Tabs>
   );
 }

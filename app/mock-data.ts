@@ -18,6 +18,8 @@ export interface Child {
   avatar: string;
   isActive: boolean;
   parentId: string;
+  xp: number; // Experience points earned through quizzes
+  completedQuizzes: string[]; // IDs of completed quizzes
   accounts: {
     spending: {
       id: string;
@@ -321,6 +323,8 @@ export const children: Child[] = [
     avatar: 'girl',
     isActive: true,
     parentId: 'p1',
+    xp: 175, // Some initial XP
+    completedQuizzes: ['q1', 'q2'], // Already completed two quizzes
     accounts: {
       spending: {
         id: 'acc1',
@@ -392,6 +396,8 @@ export const children: Child[] = [
     avatar: 'boy',
     isActive: true,
     parentId: 'p1',
+    xp: 0, // No initial XP
+    completedQuizzes: [], // No completed quizzes
     accounts: {
       spending: {
         id: 'acc4',
@@ -808,4 +814,358 @@ export const getFinanceVideoById = (videoId: string): FinanceVideo | undefined =
 // Function to get videos by age group
 export const getFinanceVideosByAge = (age: number): FinanceVideo[] => {
   return financeVideos.filter(video => video.forAgeGroups.includes(age));
+};
+
+// Quiz related interfaces
+export interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  xpReward: number;
+  questions: QuizQuestion[];
+  category: 'saving' | 'spending' | 'investing' | 'budgeting' | 'general';
+  forAgeGroups: number[]; // E.g., [8, 9, 10, 11, 12] for quizzes suitable for ages 8-12
+  imageUrl?: string;
+  completionTime: string; // Estimated time to complete, e.g., "5 min"
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctOption: number; // Index of the correct option (0-based)
+  explanation: string; // Explanation of the correct answer
+}
+
+// Mock quiz data
+export const quizzes: Quiz[] = [
+  {
+    id: 'q1',
+    title: 'Money Basics',
+    description: 'Learn the basics of money and test your knowledge!',
+    difficulty: 'easy',
+    xpReward: 50,
+    category: 'general',
+    forAgeGroups: [6, 7, 8, 9, 10],
+    imageUrl: 'https://via.placeholder.com/400x600.png?text=Money+Basics',
+    completionTime: '5 min',
+    questions: [
+      {
+        id: 'q1-1',
+        question: 'What is money used for?',
+        options: [
+          'To buy things we need and want',
+          'Only for playing games',
+          'Only for adults to use',
+          'To make paper airplanes'
+        ],
+        correctOption: 0,
+        explanation: 'Money is a tool we use to buy things we need (like food) and things we want (like toys).'
+      },
+      {
+        id: 'q1-2',
+        question: 'What should you do when you receive money as a gift?',
+        options: [
+          'Spend it all right away',
+          'Thank the person and consider saving some of it',
+          'Give it all to someone else',
+          'Hide it under your bed'
+        ],
+        correctOption: 1,
+        explanation: 'It\'s always good to thank someone for a gift, and saving some of your money is a smart habit.'
+      },
+      {
+        id: 'q1-3',
+        question: 'Which of these is NOT a place to keep your money safe?',
+        options: [
+          'A bank',
+          'A piggy bank at home',
+          'A savings account',
+          'In your pocket on the playground'
+        ],
+        correctOption: 3,
+        explanation: 'Money in your pocket while playing could easily fall out and get lost.'
+      }
+    ]
+  },
+  {
+    id: 'q2',
+    title: 'Saving Smart',
+    description: 'Test your knowledge about saving money!',
+    difficulty: 'medium',
+    xpReward: 75,
+    category: 'saving',
+    forAgeGroups: [8, 9, 10, 11, 12],
+    imageUrl: 'https://via.placeholder.com/400x600.png?text=Saving+Smart',
+    completionTime: '7 min',
+    questions: [
+      {
+        id: 'q2-1',
+        question: 'Why is it important to save money?',
+        options: [
+          'So you can buy everything you see',
+          'So you have money for future needs and goals',
+          'Because parents say so',
+          'To make your wallet heavier'
+        ],
+        correctOption: 1,
+        explanation: 'Saving helps you prepare for the future and achieve your financial goals, like buying something special.'
+      },
+      {
+        id: 'q2-2',
+        question: 'What is a savings goal?',
+        options: [
+          'A game you play with money',
+          'Something specific you want to save money for',
+          'A type of bank account',
+          'Money you give to others'
+        ],
+        correctOption: 1,
+        explanation: 'A savings goal is something specific you want to buy or do in the future, and you\'re saving money to make it happen.'
+      },
+      {
+        id: 'q2-3',
+        question: 'If you save $5 every week, how much will you have after 4 weeks?',
+        options: [
+          '$15',
+          '$20',
+          '$25',
+          '$10'
+        ],
+        correctOption: 1,
+        explanation: '$5 x 4 weeks = $20. Saving regularly adds up over time!'
+      },
+      {
+        id: 'q2-4',
+        question: 'What does "interest" mean when talking about a savings account?',
+        options: [
+          'How much you like your money',
+          'Extra money the bank gives you for keeping your savings with them',
+          'A fee you pay to the bank',
+          'Money you lose over time'
+        ],
+        correctOption: 1,
+        explanation: 'Interest is extra money a bank pays you as a reward for keeping your money in a savings account.'
+      }
+    ]
+  },
+  {
+    id: 'q3',
+    title: 'Smart Spending',
+    description: 'Learn how to make good decisions when spending money!',
+    difficulty: 'medium',
+    xpReward: 75,
+    category: 'spending',
+    forAgeGroups: [9, 10, 11, 12, 13],
+    imageUrl: 'https://via.placeholder.com/400x600.png?text=Smart+Spending',
+    completionTime: '6 min',
+    questions: [
+      {
+        id: 'q3-1',
+        question: 'What is the difference between a "need" and a "want"?',
+        options: [
+          'They are the same thing',
+          'Needs are things you must have to live, wants are things that are nice to have',
+          'Wants are more important than needs',
+          'Needs are only for adults'
+        ],
+        correctOption: 1,
+        explanation: 'Needs are things you must have to live (like food, water, shelter), while wants are things that are nice to have but not necessary (like toys or games).'
+      },
+      {
+        id: 'q3-2',
+        question: 'What should you do before buying something expensive?',
+        options: [
+          'Buy it right away before someone else does',
+          'Think about it, compare prices, and make sure you really want it',
+          'Ask your friends to buy it for you',
+          'Borrow money from someone else to buy it'
+        ],
+        correctOption: 1,
+        explanation: 'It\'s smart to think carefully before spending a lot of money. Compare prices and make sure it\'s something you really want or need.'
+      },
+      {
+        id: 'q3-3',
+        question: 'If something is on sale or discounted, it means:',
+        options: [
+          'It costs more than usual',
+          'It costs less than the normal price',
+          'It\'s broken or damaged',
+          'You have to buy more than one'
+        ],
+        correctOption: 1,
+        explanation: 'A sale or discount means the item costs less than its normal price, which can be a good opportunity to save money.'
+      }
+    ]
+  },
+  {
+    id: 'q4',
+    title: 'Investing Basics',
+    description: 'Learn about how money can grow through investing!',
+    difficulty: 'hard',
+    xpReward: 100,
+    category: 'investing',
+    forAgeGroups: [11, 12, 13, 14, 15],
+    imageUrl: 'https://via.placeholder.com/400x600.png?text=Investing+Basics',
+    completionTime: '8 min',
+    questions: [
+      {
+        id: 'q4-1',
+        question: 'What is investing?',
+        options: [
+          'Spending all your money right away',
+          'Putting money into something that might grow in value over time',
+          'Hiding your money so nobody can find it',
+          'Borrowing money from others'
+        ],
+        correctOption: 1,
+        explanation: 'Investing means putting your money into something (like stocks or a business) with the hope that it will grow in value over time.'
+      },
+      {
+        id: 'q4-2',
+        question: 'What is a stock?',
+        options: [
+          'A type of money only used in stores',
+          'A small piece of ownership in a company',
+          'A special kind of bank account',
+          'A loan you give to friends'
+        ],
+        correctOption: 1,
+        explanation: 'When you buy a stock, you\'re buying a small piece of ownership in a company. If the company does well, your stock may become more valuable.'
+      },
+      {
+        id: 'q4-3',
+        question: 'Why is it important to invest money for a long time instead of a short time?',
+        options: [
+          'Because it\'s more fun to wait',
+          'It doesn\'t matter how long you invest',
+          'Long-term investing gives your money more time to grow and can help handle ups and downs in the market',
+          'Because banks require it'
+        ],
+        correctOption: 2,
+        explanation: 'Investing for longer periods gives your money more time to grow and helps smooth out the ups and downs that happen in the short term.'
+      },
+      {
+        id: 'q4-4',
+        question: 'What is risk when talking about investing?',
+        options: [
+          'The chance that you might gain or lose money',
+          'A type of bank account',
+          'The cost of buying stocks',
+          'A guarantee that you\'ll make money'
+        ],
+        correctOption: 0,
+        explanation: 'Risk refers to the possibility that an investment might not perform as expected, which could mean making less money than you hoped or even losing some money.'
+      }
+    ]
+  },
+  {
+    id: 'q5',
+    title: 'Money Superhero Challenge!',
+    description: 'Save the day by solving money mysteries and becoming a Financial Superhero!',
+    difficulty: 'easy',
+    xpReward: 120,
+    category: 'general',
+    forAgeGroups: [8, 9, 10, 11, 12, 13, 14, 15],
+    imageUrl: 'https://via.placeholder.com/400x600.png?text=Money+Superhero',
+    completionTime: '10 min',
+    questions: [
+      {
+        id: 'q5-1',
+        question: "SUPERHERO SCENARIO: Oh no! Your friend spent all their allowance on candy and now can't buy the movie ticket they wanted. What money superpower would have helped them?",
+        options: [
+          'Invisibility Power',
+          'Super Speed',
+          'Budget Planning Power',
+          'Mind Reading'
+        ],
+        correctOption: 2,
+        explanation: "Budget Planning Power helps you decide in advance how to spend your money wisely so you don't run out before buying things that are important to you!"
+      },
+      {
+        id: 'q5-2',
+        question: "MONEY MYSTERY: The Case of the Disappearing Dollars! You got $20 for your birthday but it's quickly vanishing. What's the best superhero strategy to solve this mystery?",
+        options: [
+          'Hide the money under your pillow',
+          'Keep track of what you spend in a Money Journal',
+          'Spend it all immediately before it disappears',
+          'Blame your little brother or sister'
+        ],
+        correctOption: 1,
+        explanation: "Every superhero knows that tracking your spending in a Money Journal gives you the power to see exactly where your money goes!"
+      },
+      {
+        id: 'q5-3',
+        question: "SUPERHERO CHALLENGE: You've discovered two identical toys, but one costs $15 and the other costs $10. What money superpower should you use?",
+        options: [
+          'Super Strength to take both',
+          'Teleportation to avoid the decision',
+          'Comparison Shopping Power',
+          'X-ray vision'
+        ],
+        correctOption: 2,
+        explanation: "Comparison Shopping Power helps you find the best deal! Why pay more for the same thing? That's how money superheroes save their dollars for other things they want!"
+      },
+      {
+        id: 'q5-4',
+        question: 'SUPER VILLAIN ALERT! "Impulse Buyer" is trying to trick you into spending all your money on things you don\'t need! Which superhero defense works best?',
+        options: [
+          'The "Wait-A-Day" Shield - wait 24 hours before buying something expensive',
+          'The Invisible Cloak - hide from the villain',
+          'Super Scream - yell until your parents buy it for you',
+          'Money Doubling Ray - just make more money appear'
+        ],
+        correctOption: 0,
+        explanation: "The \"Wait-A-Day\" Shield gives you time to think about whether you really need something or if you're just excited in the moment. Many wants feel less important after waiting!"
+      },
+      {
+        id: 'q5-5',
+        question: "SUPERHERO TEAM-UP! You and your friend both want to buy an expensive game. What's the best teamwork strategy?",
+        options: [
+          'Rock-Paper-Scissors to decide who buys it',
+          'Save money together and share the game',
+          'Ask your parents to buy two games',
+          'Decide to buy different games instead'
+        ],
+        correctOption: 1,
+        explanation: "Money Superheroes know the power of teamwork! By pooling your money and sharing the game, you both get to play while spending less. That's financial teamwork!"
+      }
+    ]
+  }
+];
+
+// Helper function to get quizzes
+export const getQuizzes = (): Quiz[] => {
+  return quizzes;
+};
+
+// Get quizzes suitable for a child's age
+export const getQuizzesByAge = (age: number): Quiz[] => {
+  return quizzes.filter(quiz => quiz.forAgeGroups.includes(age));
+};
+
+// Get a specific quiz by ID
+export const getQuizById = (quizId: string): Quiz | undefined => {
+  return quizzes.find(quiz => quiz.id === quizId);
+};
+
+// Function to add XP to a child's account
+export const addChildXP = (childId: string, xpAmount: number): Child | undefined => {
+  const child = getChildById(childId);
+  if (child) {
+    child.xp += xpAmount;
+    return child;
+  }
+  return undefined;
+};
+
+// Function to mark a quiz as completed by a child
+export const completeQuiz = (childId: string, quizId: string): boolean => {
+  const child = getChildById(childId);
+  if (child && !child.completedQuizzes.includes(quizId)) {
+    child.completedQuizzes.push(quizId);
+    return true;
+  }
+  return false;
 }; 

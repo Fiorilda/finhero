@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -84,6 +84,54 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.name}>{childData.name}</Text>
             <Text style={styles.age}>{childData.age} years old</Text>
+            
+            <View style={styles.xpContainer}>
+              <FontAwesome5 name="star" size={16} color={BRAND_COLORS.primary} />
+              <Text style={styles.xpText}>{childData.xp} XP</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* XP Progress Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>My Progress</Text>
+        <View style={styles.card}>
+          <View style={styles.progressItem}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>Financial Knowledge</Text>
+              <Text style={styles.progressXP}>{childData.xp} XP</Text>
+            </View>
+            
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${Math.min(childData.xp / 500 * 100, 100)}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.progressBarText}>
+                {childData.xp} / 500 XP to next level
+              </Text>
+            </View>
+            
+            <View style={styles.badgesContainer}>
+              <Text style={styles.badgesTitle}>Badges Earned:</Text>
+              <View style={styles.badgesList}>
+                {childData.completedQuizzes.length > 0 ? (
+                  <View style={styles.badgeItem}>
+                    <View style={styles.badge}>
+                      <FontAwesome5 name="award" size={22} color={BRAND_COLORS.primary} />
+                    </View>
+                    <Text style={styles.badgeText}>Quiz Master</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.noBadgesText}>Complete quizzes to earn badges!</Text>
+                )}
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -223,6 +271,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     opacity: 0.8,
   },
+  xpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  xpText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginLeft: 6,
+  },
   section: {
     marginTop: 20,
     paddingHorizontal: 16,
@@ -244,11 +307,86 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  progressItem: {
+    padding: 16,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  progressXP: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: BRAND_COLORS.teal,
+  },
+  progressBarContainer: {
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: 12,
+    backgroundColor: '#EEEEEE',
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: BRAND_COLORS.primary,
+    borderRadius: 6,
+  },
+  progressBarText: {
+    fontSize: 12,
+    color: '#666666',
+    textAlign: 'right',
+  },
+  badgesContainer: {
+    marginTop: 8,
+  },
+  badgesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  badgesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  badgeItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    marginBottom: 8,
+  },
+  badge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  noBadgesText: {
+    fontSize: 14,
+    color: '#888888',
+    fontStyle: 'italic',
+  },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
@@ -257,7 +395,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
@@ -268,8 +406,7 @@ const styles = StyleSheet.create({
   settingText: {
     fontSize: 16,
     color: '#333333',
-    marginLeft: 16,
-    flex: 1,
+    marginLeft: 12,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -284,10 +421,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   appInfo: {
-    padding: 16,
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
+    marginTop: 40,
+    marginBottom: 30,
   },
   appVersion: {
     fontSize: 14,

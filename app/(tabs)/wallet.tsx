@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -19,9 +20,7 @@ const BRAND_COLORS = {
 export default function WalletScreen() {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>My Wallet</ThemedText>
-      </View>
+      <HeaderWithBack title="My Wallet" />
       
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Wallet Balance */}
@@ -164,17 +163,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    backgroundColor: BRAND_COLORS.primary,
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
   scrollContainer: {
     flex: 1,

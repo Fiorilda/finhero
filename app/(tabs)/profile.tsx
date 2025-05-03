@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -50,9 +51,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>Profile</ThemedText>
-      </View>
+      <HeaderWithBack title="Profile" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
@@ -208,17 +207,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F8F8',
-  },
-  header: {
-    backgroundColor: BRAND_COLORS.primary,
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
   content: {
     flex: 1,

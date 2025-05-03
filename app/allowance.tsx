@@ -12,6 +12,7 @@ import {
     View
 } from 'react-native';
 
+import { HeaderWithBack } from '@/components/HeaderWithBack';
 import { ThemedText } from '@/components/ThemedText';
 
 // Raiffeisen Bank brand colors
@@ -67,6 +68,7 @@ export default function AllowanceScreen() {
   const router = useRouter();
   const { childId, childName } = useLocalSearchParams();
   const childIdString = typeof childId === 'string' ? childId : '1';
+  const childNameString = typeof childName === 'string' ? childName : 'Child';
   
   // State for allowance settings
   const [amount, setAmount] = useState('0.00');
@@ -166,7 +168,7 @@ export default function AllowanceScreen() {
     
     Alert.alert(
       "Allowance Saved",
-      `${childName}'s allowance has been set to $${amount} ${frequency.toLowerCase()}.`,
+      `${childNameString}'s allowance has been set to $${amount} ${frequency.toLowerCase()}.`,
       [{ text: "OK", onPress: () => router.back() }]
     );
   };
@@ -175,7 +177,7 @@ export default function AllowanceScreen() {
   const handleCancelAllowance = () => {
     Alert.alert(
       "Cancel Allowance",
-      `Are you sure you want to cancel ${childName}'s allowance?`,
+      `Are you sure you want to cancel ${childNameString}'s allowance?`,
       [
         { text: "No", style: "cancel" },
         { 
@@ -194,13 +196,7 @@ export default function AllowanceScreen() {
   
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText style={styles.title}>{childName}</ThemedText>
-        <View style={{ width: 24 }} />
-      </View>
+      <HeaderWithBack title={`${childNameString}'s Allowance`} />
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <ThemedText style={styles.pageTitle}>Allowance</ThemedText>
@@ -398,29 +394,12 @@ export default function AllowanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: BRAND_COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
   },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    padding: 16,
   },
   pageTitle: {
     fontSize: 36,

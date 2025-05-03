@@ -55,7 +55,7 @@ export default function RootLayout() {
         {isAuthenticated ? (
           // Show appropriate screens based on user role
           userRole === 'parent' ? (
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           ) : (
             <Stack.Screen name="(child)" options={{ headerShown: false }} />
           )

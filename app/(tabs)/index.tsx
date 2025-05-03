@@ -40,7 +40,7 @@ const childrenData = [
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Home Header - Using a custom header for the home screen */}
       <View style={styles.header}>
         <View>
           <ThemedText style={styles.welcomeText}>Hello,</ThemedText>
