@@ -1,0 +1,402 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { HeaderWithBack } from '@/components/HeaderWithBack';
+import { ThemedText } from '@/components/ThemedText';
+
+// Raiffeisen Bank brand colors
+const BRAND_COLORS = {
+  primary: '#FFEE00', // Raiffeisen Yellow
+  secondary: '#004E9E', // Raiffeisen Blue
+  lightGray: '#AAAAAA',
+  positive: '#4CAF50',
+  teal: '#37a69b',
+};
+
+type ChildData = {
+  id: string;
+  name: string;
+  age: number;
+  email: string;
+  phone: string;
+  school: string;
+  balance: number;
+  avatar: string;
+  isActive: boolean;
+  spendingBalance?: number;
+  savingsBalance?: number;
+};
+
+// Mock data for children accounts - this would come from your actual data store
+const mockChildren = [
+  {
+    id: '1',
+    name: 'Emma Smith',
+    age: 15,
+    email: 'emma.smith@example.com',
+    phone: '555-123-4567',
+    school: 'Lincoln High School',
+    balance: 7.32,
+    avatar: 'girl',
+    isActive: true,
+    spendingBalance: 7.32,
+    savingsBalance: 0.00,
+  },
+  {
+    id: '2',
+    name: 'Noah Smith',
+    age: 13,
+    email: 'noah.smith@example.com',
+    phone: '555-987-6543',
+    school: 'Washington Middle School',
+    balance: 37.45,
+    avatar: 'boy',
+    isActive: true,
+    spendingBalance: 12.45,
+    savingsBalance: 25.00,
+  }
+];
+
+export default function ChildDetailsScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const [child, setChild] = useState<ChildData | null>(null);
+
+  useEffect(() => {
+    // In a real app, you would fetch this data from your backend or state management
+    const childData = mockChildren.find(c => c.id === id);
+    if (childData) {
+      setChild(childData);
+    }
+  }, [id]);
+
+  if (!child) {
+    return (
+      <View style={styles.container}>
+        <HeaderWithBack title="Child Details" />
+        <View style={styles.centerContent}>
+          <ThemedText>Loading child details...</ThemedText>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <HeaderWithBack title={child.name} />
+
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Child Card Header */}
+        <View style={styles.customizeCard}>
+          <View style={styles.customizeIconContainer}>
+            <Ionicons name="settings-outline" size={20} color={BRAND_COLORS.teal} />
+          </View>
+          <ThemedText style={styles.customizeText}>Customize {child.name}'s card</ThemedText>
+        </View>
+
+        {/* Financial Accounts Section */}
+        <View style={styles.accountsContainer}>
+          {/* Spending Account */}
+          <View style={styles.accountCard}>
+            <View style={styles.accountHeader}>
+              <View style={styles.accountIconContainer}>
+                <Ionicons name="card-outline" size={24} color={BRAND_COLORS.teal} />
+              </View>
+              <ThemedText style={styles.accountTitle}>Spending</ThemedText>
+            </View>
+            <ThemedText style={styles.accountBalance}>${child.spendingBalance?.toFixed(2)}</ThemedText>
+            <TouchableOpacity style={styles.accountAction}>
+              <ThemedText style={styles.accountActionText}>Manage controls</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Savings Account */}
+          <View style={styles.accountCard}>
+            <View style={styles.accountHeader}>
+              <View style={styles.accountIconContainer}>
+                <Ionicons name="save-outline" size={24} color={BRAND_COLORS.teal} />
+              </View>
+              <ThemedText style={styles.accountTitle}>Savings</ThemedText>
+            </View>
+            <ThemedText style={styles.accountBalance}>${child.savingsBalance?.toFixed(2)}</ThemedText>
+            <TouchableOpacity style={styles.accountAction}>
+              <ThemedText style={styles.accountActionText}>Start saving</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Investing Account */}
+          <View style={styles.accountCard}>
+            <View style={styles.accountHeader}>
+              <View style={styles.accountIconContainer}>
+                <Ionicons name="trending-up-outline" size={24} color={BRAND_COLORS.teal} />
+              </View>
+              <ThemedText style={styles.accountTitle}>Investing</ThemedText>
+            </View>
+            <View style={styles.emptyAccountContent}>
+              <TouchableOpacity 
+                style={styles.getStartedButton}
+                onPress={() => router.push({
+                  pathname: '/investing',
+                  params: { childId: child.id, childName: child.name }
+                })}
+              >
+                <ThemedText style={styles.getStartedText}>Get Started</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Allowance Setup */}
+          <View style={styles.accountCard}>
+            <View style={styles.accountHeader}>
+              <View style={styles.accountIconContainer}>
+                <Ionicons name="cash-outline" size={24} color={BRAND_COLORS.teal} />
+              </View>
+              <ThemedText style={styles.accountTitle}>Allowance</ThemedText>
+            </View>
+            <View style={styles.emptyAccountContent}>
+              <TouchableOpacity 
+                style={styles.getStartedButton}
+                onPress={() => router.push({
+                  pathname: '/allowance',
+                  params: { childId: child.id, childName: child.name }
+                })}
+              >
+                <ThemedText style={styles.getStartedText}>Set up</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Chores Section */}
+        <TouchableOpacity 
+          style={styles.choresCard}
+          onPress={() => router.push({
+            pathname: '/chores',
+            params: { childId: child.id, childName: child.name }
+          })}
+        >
+          <View style={styles.choresIconContainer}>
+            <View style={styles.checklistContainer}>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
+              </View>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
+              </View>
+              <View style={styles.checklistRow}>
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                <View style={styles.checklistLine} />
+              </View>
+            </View>
+          </View>
+          <View style={styles.choresContent}>
+            <ThemedText style={styles.choresTitle}>Assign chores</ThemedText>
+            <ThemedText style={styles.choresDescription}>
+              Set them weekly, monthly or just one time.
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
+
+        {/* Transaction History Button */}
+        <TouchableOpacity style={styles.actionButton}>
+          <Ionicons name="time-outline" size={22} color={BRAND_COLORS.secondary} />
+          <ThemedText style={styles.actionButtonText}>View Transaction History</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={BRAND_COLORS.secondary} />
+        </TouchableOpacity>
+
+        {/* Settings Button */}
+        <TouchableOpacity style={styles.actionButton}>
+          <Ionicons name="settings-outline" size={22} color={BRAND_COLORS.secondary} />
+          <ThemedText style={styles.actionButtonText}>Account Settings</ThemedText>
+          <Ionicons name="chevron-forward" size={20} color={BRAND_COLORS.secondary} />
+        </TouchableOpacity>
+
+        {/* Bottom spacing */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 40 : 30,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  customizeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  customizeIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e0f7fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  customizeText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+  },
+  accountsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  accountCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    width: '48%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  accountHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  accountIconContainer: {
+    marginRight: 8,
+  },
+  accountTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+  },
+  accountBalance: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 12,
+  },
+  accountAction: {
+    marginTop: 'auto',
+  },
+  accountActionText: {
+    fontSize: 14,
+    color: '#888888',
+    fontWeight: '500',
+  },
+  emptyAccountContent: {
+    height: 72,
+    justifyContent: 'center',
+  },
+  getStartedButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  getStartedText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666666',
+  },
+  choresCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  choresIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    backgroundColor: '#e57373',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  checklistContainer: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    width: '70%',
+    height: '70%',
+  },
+  checklistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    width: '100%',
+  },
+  checklistLine: {
+    height: 2,
+    backgroundColor: '#FFFFFF',
+    flex: 1,
+    marginLeft: 4,
+  },
+  choresContent: {
+    flex: 1,
+  },
+  choresTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  choresDescription: {
+    fontSize: 14,
+    color: '#777777',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  actionButtonText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginLeft: 12,
+  },
+}); 
