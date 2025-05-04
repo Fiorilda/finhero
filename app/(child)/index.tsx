@@ -177,7 +177,10 @@ export default function ChildHomeScreen() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </ThemedText>
           </View>
-          <View style={styles.avatarContainer}>
+          <TouchableOpacity 
+            style={styles.avatarContainer}
+            onPress={() => router.push('/(child)/profile')}
+          >
             <View style={styles.avatar}>
               <Ionicons 
                 name={childData.avatar === 'girl' ? 'person-circle' : 'person-circle'} 
@@ -185,7 +188,7 @@ export default function ChildHomeScreen() {
                 color={childData.avatar === 'girl' ? '#FF4081' : '#2196F3'} 
               />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Balance Card */}

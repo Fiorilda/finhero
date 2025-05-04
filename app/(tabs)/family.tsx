@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
 
 // Define brand colors since they're not in the Colors.ts file
@@ -24,6 +24,23 @@ export default function FamilyScreen() {
   const [newChildName, setNewChildName] = useState('');
   const [newChildAge, setNewChildAge] = useState('');
   const [newChildAvatar, setNewChildAvatar] = useState('boy');
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [allSteps, setAllSteps] = useState<string[]>([
+    'Enroll in FinHero',
+    'Connect with Raiffeisen Account',
+    'Link Child Account',
+    'Add Funds to Wallet',
+    'Activate Card',
+    'Complete Onboarding'
+  ]);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([
+    'Enroll in FinHero',
+    'Connect with Raiffeisen Account',
+    'Link Child Account',
+    'Add Funds to Wallet'
+  ]);
 
   // Filter children based on search text
   const filteredChildren = children.filter((child: Child) => 
@@ -38,8 +55,8 @@ export default function FamilyScreen() {
     }
 
     const age = parseInt(newChildAge);
-    if (isNaN(age) || age < 1 || age > 18) {
-      Alert.alert('Invalid Age', 'Please enter a valid age between 1 and 18.');
+    if (isNaN(age) || age < 12 || age > 17) {
+      Alert.alert('Invalid Age', 'Please enter a valid age between 12 and 17.');
       return;
     }
 
@@ -71,6 +88,49 @@ export default function FamilyScreen() {
     );
   };
 
+  // Function to handle money transfer to child
+  const handleTransfer = () => {
+    if (!selectedChild) return;
+    
+    const amount = parseFloat(transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    // Transfer logic would go here in a real app
+    Alert.alert(
+      'Transfer Successful', 
+      `$${amount.toFixed(2)} has been transferred to ${selectedChild.name}'s account.`,
+      [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            setShowTransferModal(false);
+            setTransferAmount('');
+            setSelectedChild(null);
+          } 
+        }
+      ]
+    );
+  };
+
+  // Open transfer modal for a specific child
+  const openTransferModal = (child: Child) => {
+    setSelectedChild(child);
+    setTransferAmount('');
+    setShowTransferModal(true);
+  };
+
+  // Get avatar source
+  const getAvatarSource = (avatarType: string) => {
+    if (avatarType === 'girl') {
+      return require('../../assets/images/avatar-girl.png');
+    } else {
+      return require('../../assets/images/avatar-boy.png');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -78,6 +138,50 @@ export default function FamilyScreen() {
       {/* Header */}
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>Family Management</ThemedText>
+      </View>
+
+      {/* Onboarding Progress */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressTitle}>Setup Progress</Text>
+          <Text style={styles.progressStats}>{completedSteps.length}/{allSteps.length}</Text>
+        </View>
+        
+        <View style={styles.progressBar}>
+          <View 
+            style={[
+              styles.progressFill, 
+              {width: `${(completedSteps.length / allSteps.length) * 100}%`}
+            ]} 
+          />
+        </View>
+
+        <View style={styles.stepsContainer}>
+          {allSteps.map((step, index) => (
+            <View key={index} style={styles.stepItem}>
+              <View 
+                style={[
+                  styles.stepIndicator,
+                  completedSteps.includes(step) && styles.completedStepIndicator
+                ]}
+              >
+                {completedSteps.includes(step) ? (
+                  <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.stepNumber}>{index + 1}</Text>
+                )}
+              </View>
+              <Text 
+                style={[
+                  styles.stepText,
+                  completedSteps.includes(step) && styles.completedStepText
+                ]}
+              >
+                {step}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* Search & Add Child Section */}
@@ -115,7 +219,7 @@ export default function FamilyScreen() {
           
           <TextInput
             style={styles.input}
-            placeholder="Age"
+            placeholder="Age (12-17)"
             value={newChildAge}
             onChangeText={setNewChildAge}
             keyboardType="number-pad"
@@ -129,7 +233,10 @@ export default function FamilyScreen() {
                 style={[styles.avatarOption, newChildAvatar === 'boy' && styles.selectedAvatar]}
                 onPress={() => setNewChildAvatar('boy')}
               >
-                <Ionicons name="person-circle" size={40} color="#2196F3" />
+                <Image 
+                  source={require('../../assets/images/avatar-boy.png')} 
+                  style={styles.avatarImage} 
+                />
                 <ThemedText style={styles.avatarText}>Boy</ThemedText>
               </TouchableOpacity>
               
@@ -137,7 +244,10 @@ export default function FamilyScreen() {
                 style={[styles.avatarOption, newChildAvatar === 'girl' && styles.selectedAvatar]}
                 onPress={() => setNewChildAvatar('girl')}
               >
-                <Ionicons name="person-circle" size={40} color="#FF4081" />
+                <Image 
+                  source={require('../../assets/images/avatar-girl.png')} 
+                  style={styles.avatarImage} 
+                />
                 <ThemedText style={styles.avatarText}>Girl</ThemedText>
               </TouchableOpacity>
             </View>
@@ -155,20 +265,18 @@ export default function FamilyScreen() {
       {/* Children List */}
       <ScrollView style={styles.childrenList} showsVerticalScrollIndicator={false}>
         {filteredChildren.map((child: Child) => (
-          <TouchableOpacity 
-            key={child.id}
-            style={styles.childCard}
-            onPress={() => router.push({
-              pathname: '/child-details',
-              params: { id: child.id }
-            })}
-          >
-            <View style={styles.childInfoSection}>
-              <View style={[styles.childAvatar, { backgroundColor: child.avatar === 'girl' ? '#FFC0CB' : '#ADD8E6' }]}>
-                <Ionicons 
-                  name="person" 
-                  size={24} 
-                  color={BRAND_COLORS.secondary}
+          <View key={child.id} style={styles.childCard}>
+            <TouchableOpacity 
+              style={styles.childInfoSection}
+              onPress={() => router.push({
+                pathname: '/child-details',
+                params: { id: child.id }
+              })}
+            >
+              <View style={styles.childAvatarContainer}>
+                <Image 
+                  source={getAvatarSource(child.avatar)} 
+                  style={styles.childAvatar}
                 />
               </View>
               
@@ -186,32 +294,54 @@ export default function FamilyScreen() {
                   </ThemedText>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
             
-            <View style={styles.actionsSection}>
-              <View style={styles.statusIndicator}>
-                <View style={[
-                  styles.statusDot, 
-                  { backgroundColor: child.isActive ? BRAND_COLORS.positive : '#F44336' }
-                ]} />
-                <ThemedText style={styles.statusText}>
-                  {child.isActive ? 'Card Active' : 'Card Inactive'}
-                </ThemedText>
-              </View>
+            <View style={styles.childCardDivider} />
+            
+            <View style={styles.actionsRow}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => openTransferModal(child)}
+              >
+                <Ionicons name="cash-outline" size={20} color={BRAND_COLORS.secondary} />
+                <Text style={styles.actionButtonText}>Transfer</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => router.push({
+                  pathname: '/child-details',
+                  params: { id: child.id }
+                })}
+              >
+                <Ionicons name="eye-outline" size={20} color={BRAND_COLORS.secondary} />
+                <Text style={styles.actionButtonText}>View</Text>
+              </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[
-                  styles.toggleButton,
-                  { backgroundColor: child.isActive ? '#F44336' : BRAND_COLORS.positive }
+                  styles.actionButton, 
+                  styles.toggleCardButton,
+                  { backgroundColor: child.isActive ? '#FEE8E8' : '#E8F5E9' }
                 ]}
                 onPress={() => toggleCardStatus(child.id)}
               >
-                <ThemedText style={styles.toggleButtonText}>
-                  {child.isActive ? 'Deactivate' : 'Activate'}
-                </ThemedText>
+                <Ionicons 
+                  name={child.isActive ? "card" : "card-outline"} 
+                  size={20} 
+                  color={child.isActive ? BRAND_COLORS.negative : BRAND_COLORS.positive} 
+                />
+                <Text 
+                  style={[
+                    styles.actionButtonText,
+                    {color: child.isActive ? BRAND_COLORS.negative : BRAND_COLORS.positive}
+                  ]}
+                >
+                  {child.isActive ? 'Deactivate Card' : 'Activate Card'}
+                </Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
         ))}
         
         {filteredChildren.length === 0 && (
@@ -223,9 +353,106 @@ export default function FamilyScreen() {
             <ThemedText style={styles.emptyStateSubtext}>
               {searchText ? 'Try a different search term' : 'Add a child to get started'}
             </ThemedText>
+            
+            {!searchText && (
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => setShowAddChildForm(true)}
+              >
+                <ThemedText style={styles.emptyStateButtonText}>Add Child</ThemedText>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
+
+      {/* Transfer Money Modal */}
+      <Modal
+        visible={showTransferModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowTransferModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Transfer Money</Text>
+              <TouchableOpacity onPress={() => setShowTransferModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedChild && (
+              <View style={styles.transferToContainer}>
+                <Text style={styles.transferToLabel}>To:</Text>
+                <View style={styles.transferToChild}>
+                  <Image 
+                    source={getAvatarSource(selectedChild.avatar)} 
+                    style={styles.transferToAvatar} 
+                  />
+                  <Text style={styles.transferToName}>{selectedChild.name}</Text>
+                </View>
+              </View>
+            )}
+            
+            <View style={styles.transferAmountContainer}>
+              <Text style={styles.transferAmountLabel}>Amount:</Text>
+              <View style={styles.transferAmountInputContainer}>
+                <Text style={styles.currencySymbol}>$</Text>
+                <TextInput
+                  style={styles.transferAmountInput}
+                  value={transferAmount}
+                  onChangeText={setTransferAmount}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  placeholderTextColor="#999"
+                />
+              </View>
+            </View>
+            
+            <View style={styles.transferOptions}>
+              <TouchableOpacity 
+                style={styles.quickAmountButton}
+                onPress={() => setTransferAmount('5')}
+              >
+                <Text style={styles.quickAmountText}>$5</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickAmountButton}
+                onPress={() => setTransferAmount('10')}
+              >
+                <Text style={styles.quickAmountText}>$10</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickAmountButton}
+                onPress={() => setTransferAmount('20')}
+              >
+                <Text style={styles.quickAmountText}>$20</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickAmountButton}
+                onPress={() => setTransferAmount('50')}
+              >
+                <Text style={styles.quickAmountText}>$50</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={[
+                styles.transferButton,
+                (!transferAmount || parseFloat(transferAmount) <= 0) && styles.disabledButton
+              ]}
+              onPress={handleTransfer}
+              disabled={!transferAmount || parseFloat(transferAmount) <= 0}
+            >
+              <Text style={styles.transferButtonText}>Transfer Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -233,7 +460,7 @@ export default function FamilyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F8F8',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
   header: {
@@ -247,6 +474,77 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: BRAND_COLORS.secondary,
   },
+  progressContainer: {
+    margin: 16,
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  progressStats: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: BRAND_COLORS.secondary,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    marginBottom: 16,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: BRAND_COLORS.positive,
+    borderRadius: 4,
+  },
+  stepsContainer: {
+    marginTop: 8,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  stepIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  completedStepIndicator: {
+    backgroundColor: BRAND_COLORS.positive,
+  },
+  stepNumber: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#666',
+  },
+  stepText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  completedStepText: {
+    fontWeight: '500',
+    color: '#333',
+  },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -256,11 +554,16 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     paddingHorizontal: 10,
     marginRight: 10,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   searchIcon: {
     marginRight: 8,
@@ -277,6 +580,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   childrenList: {
     flex: 1,
@@ -287,27 +595,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 16,
-    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    overflow: 'hidden',
   },
   childInfoSection: {
     flexDirection: 'row',
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    paddingBottom: 12,
+    padding: 16,
+  },
+  childAvatarContainer: {
+    marginRight: 16,
   },
   childAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
   },
   childDetails: {
     flex: 1,
@@ -337,50 +642,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: BRAND_COLORS.secondary,
   },
-  actionsSection: {
+  childCardDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginHorizontal: 16,
+  },
+  actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 12,
   },
-  statusIndicator: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  toggleButton: {
-    paddingVertical: 6,
+    justifyContent: 'center',
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
+    backgroundColor: '#F5F5F5',
   },
-  toggleButtonText: {
+  toggleCardButton: {
+    paddingHorizontal: 16,
+  },
+  actionButtonText: {
     fontSize: 12,
-    color: '#FFFFFF',
     fontWeight: '500',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 12,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
+    color: BRAND_COLORS.secondary,
+    marginLeft: 4,
   },
   addChildForm: {
     backgroundColor: '#FFFFFF',
@@ -423,6 +711,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
+  avatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
   selectedAvatar: {
     backgroundColor: 'rgba(0, 78, 158, 0.1)',
     borderWidth: 1,
@@ -444,4 +737,140 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-}); 
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  emptyStateButton: {
+    backgroundColor: BRAND_COLORS.secondary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  emptyStateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  transferToContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  transferToLabel: {
+    fontSize: 16,
+    color: '#666',
+    marginRight: 8,
+  },
+  transferToChild: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  transferToAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  transferToName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  transferAmountContainer: {
+    marginBottom: 20,
+  },
+  transferAmountLabel: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 8,
+  },
+  transferAmountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  currencySymbol: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 4,
+  },
+  transferAmountInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  transferOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  quickAmountButton: {
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  quickAmountText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  transferButton: {
+    backgroundColor: BRAND_COLORS.secondary,
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  transferButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  }
+});

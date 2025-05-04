@@ -69,25 +69,6 @@ export default function ChildTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="investing"
-        options={{
-          title: 'Invest',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trending-up" size={size} color={color} />
-          ),
-          headerTitle: 'Learn Investing',
-        }}
-      />
-      <Tabs.Screen
-        name="chores"
-        options={{
-          title: 'Chores',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkbox" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="videos"
         options={{
           title: 'Learn',
@@ -107,6 +88,29 @@ export default function ChildTabsLayout() {
           headerTitle: 'Financial Quizzes',
         }}
       />
+      
+      {/* These screens exist in the app but are hidden from tab bar */}
+      <Tabs.Screen
+        name="investing"
+        options={{
+          title: 'Invest',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trending-up" size={size} color={color} />
+          ),
+          headerTitle: 'Learn Investing',
+          href: null, // This removes it from the tab bar but keeps it in the navigation
+        }}
+      />
+      <Tabs.Screen
+        name="chores"
+        options={{
+          title: 'Chores',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkbox" size={size} color={color} />
+          ),
+          href: null, // This removes it from the tab bar but keeps it in the navigation
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
@@ -115,6 +119,7 @@ export default function ChildTabsLayout() {
             <Ionicons name="person" size={size} color={color} />
           ),
           headerTitle: 'My Profile',
+          href: null, // This removes it from the tab bar but keeps it in the navigation
         }}
       />
     </Tabs>

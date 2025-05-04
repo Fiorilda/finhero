@@ -23,7 +23,7 @@ const childrenData = [
     id: '1',
     name: 'Emma',
     age: 15,
-    balance: 120.50,
+    balance: 7.32,
     avatar: 'girl',
     isActive: true,
   },
