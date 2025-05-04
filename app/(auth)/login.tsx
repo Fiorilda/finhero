@@ -2,19 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View
+  Alert,
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from 'react-native';
 
 import { users } from '@/app/mock-data';
@@ -26,6 +25,75 @@ const BRAND_COLORS = {
   lightGray: '#AAAAAA',
   positive: '#4CAF50',
   teal: '#37a69b',
+};
+
+// Soft shadows for a more professional look
+const SHADOWS = {
+  light: {
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  medium: {
+    shadowColor: 'rgba(0, 0, 0, 0.2)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  strong: {
+    shadowColor: 'rgba(0, 0, 0, 0.3)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+};
+
+// Define prop types for our GradientButton component
+interface GradientButtonProps {
+  style?: any;
+  colors: string[];
+  start?: { x: number; y: number };
+  end?: { x: number; y: number };
+  children: React.ReactNode;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+// Add a gradient helper component since React Native doesn't have built-in LinearGradient
+const GradientButton = ({ 
+  style, 
+  colors, 
+  start, 
+  end, 
+  children, 
+  onPress, 
+  disabled = false 
+}: GradientButtonProps) => {
+  const buttonStyles = [styles.gradientButton, style];
+  const gradientColors = disabled ? ['#F5F5F5', '#EEEEEE'] : colors;
+  
+  return (
+    <TouchableOpacity 
+      style={buttonStyles} 
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.8}
+    >
+      <View style={{ 
+        backgroundColor: gradientColors[0], 
+        borderRadius: (style && style.borderRadius) || 12,
+        overflow: 'hidden', 
+        width: '100%',
+        ...style
+      }}>
+        {children}
+      </View>
+    </TouchableOpacity>
+  );
 };
 
 export default function LoginScreen() {
@@ -105,6 +173,8 @@ export default function LoginScreen() {
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
       >
+        <View style={styles.backgroundTop} />
+        
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -113,10 +183,6 @@ export default function LoginScreen() {
           <View style={styles.content}>
             {/* Logo and Header */}
             <View style={styles.header}>
-              <Image
-                source={{ uri: 'https://via.placeholder.com/100x100.png?text=FinHero' }}
-                style={styles.logo}
-              />
               <Text style={styles.title}>FinHero</Text>
               <Text style={styles.subtitle}>Financial education for kids</Text>
             </View>
@@ -172,9 +238,14 @@ export default function LoginScreen() {
                 <TouchableOpacity style={styles.forgotPassword}>
                   <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                
+                <GradientButton 
+                  style={styles.loginButton} 
+                  colors={['#FFEE00', '#FFD000']} 
+                  onPress={handleLogin}
+                >
                   <Text style={styles.loginButtonText}>Login</Text>
-                </TouchableOpacity>
+                </GradientButton>
                 
                 {/* Parent Quick Login (for demo) */}
                 <View style={styles.quickLoginSection}>
@@ -265,16 +336,20 @@ export default function LoginScreen() {
                 )}
 
                 {/* Login button for child mode */}
-                <TouchableOpacity 
+                <GradientButton 
                   style={[
                     styles.loginButton,
                     (!selectedUser || pin.length < 4) && styles.loginButtonDisabled
                   ]} 
+                  colors={['#FFEE00', '#FFD000']} 
                   onPress={handleLogin}
                   disabled={!selectedUser || pin.length < 4}
                 >
-                  <Text style={styles.loginButtonText}>Login</Text>
-                </TouchableOpacity>
+                  <Text style={[
+                    styles.loginButtonText,
+                    (!selectedUser || pin.length < 4) && styles.loginButtonTextDisabled
+                  ]}>Login</Text>
+                </GradientButton>
               </View>
             )}
 
@@ -295,84 +370,102 @@ export default function LoginScreen() {
 }
 
 const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
+  },
+  backgroundTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: windowHeight * 0.35,
+    backgroundColor: 'rgba(255, 238, 0, 0.08)',
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    padding: 24,
+    padding: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: Dimensions.get('window').height - (Platform.OS === 'ios' ? 40 : 0),
+    minHeight: windowHeight - (Platform.OS === 'ios' ? 40 : 0),
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+    marginTop: 10,
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 16,
-    borderRadius: 20,
+    width: 110,
+    height: 110,
+    marginBottom: 20,
+    borderRadius: 25,
+    ...SHADOWS.strong,
+    backgroundColor: '#FFFFFF',
   },
   title: {
-    fontSize: 28,
+    fontSize: 40,
     fontWeight: 'bold',
     color: BRAND_COLORS.secondary,
-    marginBottom: 8,
+    marginBottom: 10,
+    letterSpacing: 1,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
+    color: '#555555',
+    letterSpacing: 0.5,
   },
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    marginBottom: 24,
-    padding: 4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 40,
+    padding: 5,
     width: '100%',
+    ...SHADOWS.light,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 10,
   },
   toggleButtonActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: BRAND_COLORS.primary,
+    ...SHADOWS.light,
   },
   toggleText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#888888',
+    color: '#555555',
   },
   toggleTextActive: {
-    color: BRAND_COLORS.secondary,
+    color: '#000000',
+    fontWeight: 'bold',
   },
   form: {
     width: '100%',
+    alignItems: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    borderRadius: 8,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    height: 50,
+    borderColor: '#E0E0E0',
+    borderRadius: 14,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    height: 60,
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    ...SHADOWS.light,
   },
   inputIcon: {
     marginRight: 12,
@@ -384,26 +477,41 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   forgotPasswordText: {
     color: BRAND_COLORS.secondary,
     fontSize: 14,
+    fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: BRAND_COLORS.secondary,
-    borderRadius: 8,
-    paddingVertical: 16,
+    width: '100%',
+    borderRadius: 12,
+    paddingVertical: 0,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
+    ...SHADOWS.medium,
   },
   loginButtonDisabled: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: '#F5F5F5',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   loginButtonText: {
-    color: '#FFFFFF',
+    color: BRAND_COLORS.secondary,
     fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    paddingVertical: 12,
+  },
+  loginButtonTextDisabled: {
+    color: '#AAAAAA',
+  },
+  gradientButton: {
+    borderRadius: 12,
   },
   signupContainer: {
     flexDirection: 'row',
@@ -415,14 +523,14 @@ const styles = StyleSheet.create({
   },
   signupLink: {
     color: BRAND_COLORS.secondary,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   sectionLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#333333',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   childrenContainer: {
     flexDirection: 'row',
@@ -433,15 +541,17 @@ const styles = StyleSheet.create({
   childItem: {
     alignItems: 'center',
     margin: 8,
-    padding: 12,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: 'transparent',
     width: windowWidth / 3 - 24,
+    backgroundColor: '#FAFAFA',
   },
   childItemSelected: {
-    borderColor: BRAND_COLORS.teal,
-    backgroundColor: 'rgba(55, 166, 155, 0.1)',
+    borderColor: BRAND_COLORS.primary,
+    backgroundColor: 'rgba(255, 238, 0, 0.15)',
+    ...SHADOWS.light,
   },
   childAvatar: {
     width: 60,
@@ -450,7 +560,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    ...SHADOWS.light,
   },
   childName: {
     fontSize: 14,
@@ -462,10 +573,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   pinLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#333333',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   pinContainer: {
     alignItems: 'center',
@@ -482,17 +593,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pinDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#EEEEEE',
-    marginHorizontal: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F0F0F0',
+    marginHorizontal: 10,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#E0E0E0',
   },
   pinDotFilled: {
-    backgroundColor: BRAND_COLORS.secondary,
-    borderColor: BRAND_COLORS.secondary,
+    backgroundColor: BRAND_COLORS.primary,
+    borderColor: '#E0C800',
+    ...SHADOWS.light,
   },
   pinHint: {
     fontSize: 12,
@@ -500,34 +612,41 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   quickLoginSection: {
-    marginTop: 24,
+    marginTop: 32,
+    width: '100%',
   },
   quickLoginTitle: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 12,
+    fontSize: 15,
+    color: '#555555',
+    marginBottom: 16,
     textAlign: 'center',
+    fontWeight: '500',
   },
   quickLoginOptions: {
     flexDirection: 'row',
     justifyContent: 'center',
+    width: '100%',
   },
   quickLoginItem: {
     alignItems: 'center',
-    margin: 8,
+    margin: 12,
   },
   quickLoginAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    ...SHADOWS.light,
+    borderWidth: 2,
+    borderColor: BRAND_COLORS.primary,
   },
   quickLoginName: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#333333',
+    fontWeight: '500',
   },
 }); 
  
