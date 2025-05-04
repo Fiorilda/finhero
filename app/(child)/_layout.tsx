@@ -48,7 +48,37 @@ export default function ChildTabsLayout() {
           ),
         }}
       />
-        <Tabs.Screen
+      <Tabs.Screen
+        name="spending"
+        options={{
+          title: 'Spending',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="card" size={size} color={color} />
+          ),
+          headerTitle: 'My Spending',
+        }}
+      />
+      <Tabs.Screen
+        name="goals"
+        options={{
+          title: 'Goals',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="flag" size={size} color={color} />
+          ),
+          headerTitle: 'Savings Goals',
+        }}
+      />
+      <Tabs.Screen
+        name="investing"
+        options={{
+          title: 'Invest',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trending-up" size={size} color={color} />
+          ),
+          headerTitle: 'Learn Investing',
+        }}
+      />
+      <Tabs.Screen
         name="chores"
         options={{
           title: 'Chores',
@@ -57,7 +87,6 @@ export default function ChildTabsLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="videos"
         options={{
@@ -78,25 +107,16 @@ export default function ChildTabsLayout() {
           headerTitle: 'Financial Quizzes',
         }}
       />
-{/*     
       <Tabs.Screen
-        name="goals"
-        options={{
-          title: 'Goals',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flag" size={size} color={color} />
-          ),
-        }}
-      /> */}
-      {/* <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+          headerTitle: 'My Profile',
         }}
-      /> */}
+      />
     </Tabs>
   );
 }

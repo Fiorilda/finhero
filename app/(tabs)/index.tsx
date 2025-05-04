@@ -108,7 +108,7 @@ export default function HomeScreen() {
           <View style={[styles.balanceContainer, { backgroundColor: BRAND_COLORS.primary }]}>
             <ThemedText style={styles.balanceLabel}>Parent's Wallet</ThemedText>
             <View style={styles.balanceRow}>
-              <ThemedText style={styles.balanceAmount}>$1,287.45</ThemedText>
+              <ThemedText style={styles.balanceAmount}>$320.45</ThemedText>
               <TouchableOpacity style={styles.addMoneyButton} onPress={() => router.push('/(tabs)/wallet')}>
                 <ThemedText style={styles.addMoneyText}>Add $</ThemedText>
               </TouchableOpacity>

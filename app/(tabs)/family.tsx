@@ -1,516 +1,231 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, FlatList, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from '../../components/ThemedText';
 
-import { HeaderWithBack } from '@/components/HeaderWithBack';
-import { ThemedText } from '@/components/ThemedText';
-
-// Raiffeisen Bank brand colors
+// Define brand colors since they're not in the Colors.ts file
 const BRAND_COLORS = {
-  primary: '#FFEE00', // Raiffeisen Yellow
-  secondary: '#004E9E', // Raiffeisen Blue
-  lightGray: '#AAAAAA',
-  positive: '#4CAF50',
+  primary: '#FFEE00',    // Raiffeisen Yellow
+  secondary: '#004E9E',  // Raiffeisen Blue
+  positive: '#4CAF50',   // Green for positive states
+  negative: '#F44336',   // Red for negative states
+  teal: '#00BCD4',       // Teal for special highlights
+  lightGray: '#CCCCCC'   // Light gray for neutral elements
 };
 
-// Mock data for children accounts
-const initialChildren = [
-  {
-    id: '1',
-    name: 'Emma Smith',
-    age: 15,
-    email: 'emma.smith@example.com',
-    phone: '555-123-4567',
-    school: 'Lincoln High School',
-    balance: 120.50,
-    avatar: 'girl',
-    isActive: true,
-  },
-  {
-    id: '2',
-    name: 'Noah Smith',
-    age: 13,
-    email: 'noah.smith@example.com',
-    phone: '555-987-6543',
-    school: 'Washington Middle School',
-    balance: 75.25,
-    avatar: 'boy',
-    isActive: true,
-  }
-];
+// Import from the correct location
+import { Child, children } from '../../app/mock-data';
 
 export default function FamilyScreen() {
-  const router = useRouter();
-  const [children, setChildren] = useState(initialChildren);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [transferModalVisible, setTransferModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [showAddChildForm, setShowAddChildForm] = useState(false);
   const [newChildName, setNewChildName] = useState('');
   const [newChildAge, setNewChildAge] = useState('');
-  const [newChildEmail, setNewChildEmail] = useState('');
-  const [newChildPhone, setNewChildPhone] = useState('');
-  const [newChildSchool, setNewChildSchool] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('girl');
-  const [transferAmount, setTransferAmount] = useState('');
-  const [selectedChildId, setSelectedChildId] = useState('');
-  const [currentStep, setCurrentStep] = useState(1);
+  const [newChildAvatar, setNewChildAvatar] = useState('boy');
 
-  const resetAddChildForm = () => {
-    setNewChildName('');
-    setNewChildAge('');
-    setNewChildEmail('');
-    setNewChildPhone('');
-    setNewChildSchool('');
-    setSelectedAvatar('girl');
-    setCurrentStep(1);
-  };
+  // Filter children based on search text
+  const filteredChildren = children.filter((child: Child) => 
+    child.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-  const closeAddChildModal = () => {
-    setModalVisible(false);
-    resetAddChildForm();
-  };
-
-  const validateStep1 = () => {
+  // Function to handle adding a new child
+  const handleAddChild = () => {
     if (!newChildName.trim()) {
-      Alert.alert('Missing Information', 'Please enter your child\'s name');
-      return false;
-    }
-    
-    if (!newChildAge.trim()) {
-      Alert.alert('Missing Information', 'Please enter your child\'s age');
-      return false;
-    }
-    
-    const age = parseInt(newChildAge);
-    if (isNaN(age) || age < 12 || age > 17) {
-      Alert.alert('Invalid Age', 'Please enter a valid age between 12-17');
-      return false;
-    }
-    
-    return true;
-  };
-
-  const goToNextStep = () => {
-    if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      addChild();
-    }
-  };
-
-  const addChild = () => {
-    const age = parseInt(newChildAge);
-    
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (newChildEmail.trim() && !emailPattern.test(newChildEmail)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      Alert.alert('Required Field', 'Please enter a name for the child.');
       return;
     }
 
-    const newChild = {
-      id: Date.now().toString(),
-      name: newChildName.trim(),
-      age: age,
-      email: newChildEmail.trim(),
-      phone: newChildPhone.trim(),
-      school: newChildSchool.trim(),
-      balance: 0,
-      avatar: selectedAvatar,
-      isActive: false,
-    };
+    const age = parseInt(newChildAge);
+    if (isNaN(age) || age < 1 || age > 18) {
+      Alert.alert('Invalid Age', 'Please enter a valid age between 1 and 18.');
+      return;
+    }
 
-    setChildren([...children, newChild]);
-    closeAddChildModal();
+    // Add child logic would go here in a real app
     Alert.alert(
-      'Child Added Successfully', 
-      'Transfer money to activate your child\'s account.',
-      [{ text: 'OK' }]
-    );
-  };
-
-  const removeChild = (id: string) => {
-    Alert.alert(
-      'Remove Child Account',
-      'Are you sure you want to remove this child account?',
+      'Success!', 
+      `Child ${newChildName} has been added. An invitation has been sent to set up their account.`,
       [
-        { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Remove', 
-          style: 'destructive',
+          text: 'OK', 
           onPress: () => {
-            setChildren(children.filter(child => child.id !== id));
-          }
+            setShowAddChildForm(false);
+            setNewChildName('');
+            setNewChildAge('');
+            setNewChildAvatar('boy');
+          } 
         }
       ]
     );
   };
 
-  const openTransferModal = (id: string) => {
-    setSelectedChildId(id);
-    setTransferAmount('');
-    setTransferModalVisible(true);
+  // Function to toggle card activation status
+  const toggleCardStatus = (childId: string) => {
+    // This would update the database in a real app
+    Alert.alert(
+      'Card Status Updated',
+      'The card status has been updated successfully.',
+      [{ text: 'OK' }]
+    );
   };
-
-  const transferMoney = () => {
-    const amount = parseFloat(transferAmount);
-    if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
-    }
-
-    setChildren(children.map(child => {
-      if (child.id === selectedChildId) {
-        return {
-          ...child,
-          balance: child.balance + amount,
-          isActive: true, // Activate the account when transferring money
-        };
-      }
-      return child;
-    }));
-
-    setTransferModalVisible(false);
-    Alert.alert('Success', 'Money transferred successfully!');
-  };
-
-  const toggleAccountStatus = (id: string) => {
-    setChildren(children.map(child => {
-      if (child.id === id) {
-        return {
-          ...child,
-          isActive: !child.isActive,
-        };
-      }
-      return child;
-    }));
-  };
-
-  const navigateToChildDetails = (childId: string) => {
-    router.push({
-      pathname: '/child-details',
-      params: { id: childId }
-    });
-  };
-
-  const renderChildItem = ({ item }: { item: typeof children[0] }) => (
-    <TouchableOpacity 
-      onPress={() => navigateToChildDetails(item.id)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.childCard}>
-        <View style={styles.childInfo}>
-          <View style={[styles.avatar, { backgroundColor: item.avatar === 'girl' ? '#FFC0CB' : '#ADD8E6' }]}>
-            <Ionicons 
-              name="person" 
-              size={30} 
-              color={BRAND_COLORS.secondary} 
-            />
-          </View>
-          <View style={styles.childDetails}>
-            <View style={styles.nameStatusRow}>
-              <ThemedText style={styles.childName}>{item.name}</ThemedText>
-              <View style={[styles.statusBadge, { backgroundColor: item.isActive ? '#E8F5E9' : '#FFEBEE' }]}>
-                <ThemedText style={[styles.statusText, { color: item.isActive ? BRAND_COLORS.positive : '#F44336' }]}>
-                  {item.isActive ? 'Active' : 'Inactive'}
-                </ThemedText>
-              </View>
-            </View>
-            <ThemedText style={styles.childAge}>{item.age} years old</ThemedText>
-            {item.school ? <ThemedText style={styles.childSchool}>{item.school}</ThemedText> : null}
-          </View>
-        </View>
-        
-        <View style={styles.balanceSection}>
-          <ThemedText style={styles.balanceLabel}>Balance</ThemedText>
-          <ThemedText style={styles.balanceAmount}>${item.balance.toFixed(2)}</ThemedText>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.transferButton]} 
-              onPress={(e) => {
-                e.stopPropagation();
-                openTransferModal(item.id);
-              }}
-            >
-              <Ionicons name="wallet-outline" size={16} color="#FFFFFF" />
-              <ThemedText style={styles.actionButtonText}>Transfer</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.toggleButton, { backgroundColor: item.isActive ? '#F44336' : BRAND_COLORS.positive }]}
-              onPress={(e) => {
-                e.stopPropagation();
-                toggleAccountStatus(item.id);
-              }}
-            >
-              <ThemedText style={styles.actionButtonText}>{item.isActive ? 'Deactivate' : 'Activate'}</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.removeButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            removeChild(item.id);
-          }}
-        >
-          <Ionicons name="close-circle" size={22} color="#FF6B6B" />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicatorContainer}>
-      <View style={[styles.stepIndicator, currentStep >= 1 ? styles.activeStep : {}]}>
-        <ThemedText style={[styles.stepNumber, currentStep >= 1 ? styles.activeStepNumber : {}]}>1</ThemedText>
-      </View>
-      <View style={styles.stepConnector} />
-      <View style={[styles.stepIndicator, currentStep >= 2 ? styles.activeStep : {}]}>
-        <ThemedText style={[styles.stepNumber, currentStep >= 2 ? styles.activeStepNumber : {}]}>2</ThemedText>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
-      <HeaderWithBack title="Manage Children" />
+      <StatusBar style="auto" />
       
-      <View style={styles.content}>
-        <View style={styles.summary}>
-          <View style={styles.summaryCard}>
-            <ThemedText style={styles.summaryNumber}>{children.length}</ThemedText>
-            <ThemedText style={styles.summaryLabel}>Children</ThemedText>
-          </View>
-          <View style={styles.summaryCard}>
-            <ThemedText style={styles.summaryNumber}>
-              {children.filter(child => child.isActive).length}
-            </ThemedText>
-            <ThemedText style={styles.summaryLabel}>Active</ThemedText>
-          </View>
-          <View style={styles.summaryCard}>
-            <ThemedText style={styles.summaryNumber}>
-              {children.filter(child => !child.isActive).length}
-            </ThemedText>
-            <ThemedText style={styles.summaryLabel}>Inactive</ThemedText>
-          </View>
-        </View>
-
-        <FlatList
-          data={children}
-          renderItem={renderChildItem}
-          keyExtractor={item => item.id}
-          style={styles.childrenList}
-          contentContainerStyle={styles.childrenListContent}
-          ListHeaderComponent={
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => setModalVisible(true)}
-            >
-              <Ionicons name="add-circle" size={24} color={BRAND_COLORS.secondary} />
-              <ThemedText style={styles.addButtonText}>Add a Child</ThemedText>
-            </TouchableOpacity>
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="people" size={60} color="#CCCCCC" />
-              <ThemedText style={styles.emptyStateText}>No children added yet</ThemedText>
-              <TouchableOpacity 
-                style={styles.emptyStateButton}
-                onPress={() => setModalVisible(true)}
-              >
-                <ThemedText style={styles.emptyStateButtonText}>Add Your First Child</ThemedText>
-              </TouchableOpacity>
-            </View>
-          }
-        />
+      {/* Header */}
+      <View style={styles.header}>
+        <ThemedText style={styles.headerTitle}>Family Management</ThemedText>
       </View>
 
-      {/* Add Child Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeAddChildModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>
-                {currentStep === 1 ? 'Basic Information' : 'Additional Information'}
-              </ThemedText>
-              <TouchableOpacity onPress={closeAddChildModal}>
-                <Ionicons name="close" size={24} color="#000000" />
+      {/* Search & Add Child Section */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search children..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#999"
+          />
+        </View>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => setShowAddChildForm(!showAddChildForm)}
+        >
+          <Ionicons name={showAddChildForm ? "close" : "add"} size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Add Child Form */}
+      {showAddChildForm && (
+        <View style={styles.addChildForm}>
+          <ThemedText style={styles.formTitle}>Add a New Child</ThemedText>
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Child's Name"
+            value={newChildName}
+            onChangeText={setNewChildName}
+            placeholderTextColor="#999"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Age"
+            value={newChildAge}
+            onChangeText={setNewChildAge}
+            keyboardType="number-pad"
+            placeholderTextColor="#999"
+          />
+          
+          <View style={styles.avatarSelection}>
+            <ThemedText style={styles.avatarLabel}>Choose an Avatar:</ThemedText>
+            <View style={styles.avatarOptions}>
+              <TouchableOpacity 
+                style={[styles.avatarOption, newChildAvatar === 'boy' && styles.selectedAvatar]}
+                onPress={() => setNewChildAvatar('boy')}
+              >
+                <Ionicons name="person-circle" size={40} color="#2196F3" />
+                <ThemedText style={styles.avatarText}>Boy</ThemedText>
               </TouchableOpacity>
-            </View>
-
-            {renderStepIndicator()}
-
-            <ScrollView 
-              style={styles.modalScrollView}
-              showsVerticalScrollIndicator={false}
-            >
-              {currentStep === 1 ? (
-                <View style={styles.modalForm}>
-                  <View style={styles.inputContainer}>
-                    <ThemedText style={styles.label}>Child's Name*</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter child's full name"
-                      value={newChildName}
-                      onChangeText={setNewChildName}
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <ThemedText style={styles.label}>Child's Age* (12-17)</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter age between 12-17"
-                      value={newChildAge}
-                      onChangeText={setNewChildAge}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                  </View>
-
-                  <View style={styles.avatarSelectionContainer}>
-                    <ThemedText style={styles.label}>Select Avatar</ThemedText>
-                    <View style={styles.avatarOptions}>
-                      <TouchableOpacity 
-                        style={[
-                          styles.avatarOption, 
-                          selectedAvatar === 'girl' && styles.selectedAvatarOption
-                        ]}
-                        onPress={() => setSelectedAvatar('girl')}
-                      >
-                        <View style={[styles.avatarPreview, { backgroundColor: '#FFC0CB' }]}>
-                          <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
-                        </View>
-                        <ThemedText style={styles.avatarLabel}>Girl</ThemedText>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity 
-                        style={[
-                          styles.avatarOption,
-                          selectedAvatar === 'boy' && styles.selectedAvatarOption
-                        ]}
-                        onPress={() => setSelectedAvatar('boy')}
-                      >
-                        <View style={[styles.avatarPreview, { backgroundColor: '#ADD8E6' }]}>
-                          <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
-                        </View>
-                        <ThemedText style={styles.avatarLabel}>Boy</ThemedText>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.modalForm}>
-                  <View style={styles.inputContainer}>
-                    <ThemedText style={styles.label}>Email Address</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter child's email (optional)"
-                      value={newChildEmail}
-                      onChangeText={setNewChildEmail}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <ThemedText style={styles.label}>Phone Number</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter child's phone (optional)"
-                      value={newChildPhone}
-                      onChangeText={setNewChildPhone}
-                      keyboardType="phone-pad"
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <ThemedText style={styles.label}>School Name</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter child's school (optional)"
-                      value={newChildSchool}
-                      onChangeText={setNewChildSchool}
-                    />
-                  </View>
-
-                  <ThemedText style={styles.noteText}>
-                    Note: After adding your child, you'll need to transfer money to activate their account.
-                  </ThemedText>
-                </View>
-              )}
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              {currentStep === 2 && (
-                <TouchableOpacity 
-                  style={styles.backButton}
-                  onPress={() => setCurrentStep(1)}
-                >
-                  <ThemedText style={styles.backButtonText}>Back</ThemedText>
-                </TouchableOpacity>
-              )}
               
               <TouchableOpacity 
-                style={[styles.addChildButtonModal, styles.nextButton]}
-                onPress={goToNextStep}
+                style={[styles.avatarOption, newChildAvatar === 'girl' && styles.selectedAvatar]}
+                onPress={() => setNewChildAvatar('girl')}
               >
-                <ThemedText style={styles.addChildButtonText}>
-                  {currentStep === 1 ? 'Next' : 'Add Child'}
+                <Ionicons name="person-circle" size={40} color="#FF4081" />
+                <ThemedText style={styles.avatarText}>Girl</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.submitButton}
+            onPress={handleAddChild}
+          >
+            <ThemedText style={styles.submitButtonText}>Add Child</ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Children List */}
+      <ScrollView style={styles.childrenList} showsVerticalScrollIndicator={false}>
+        {filteredChildren.map((child: Child) => (
+          <TouchableOpacity 
+            key={child.id}
+            style={styles.childCard}
+            onPress={() => router.push({
+              pathname: '/child-details',
+              params: { id: child.id }
+            })}
+          >
+            <View style={styles.childInfoSection}>
+              <View style={[styles.childAvatar, { backgroundColor: child.avatar === 'girl' ? '#FFC0CB' : '#ADD8E6' }]}>
+                <Ionicons 
+                  name="person" 
+                  size={24} 
+                  color={BRAND_COLORS.secondary}
+                />
+              </View>
+              
+              <View style={styles.childDetails}>
+                <ThemedText style={styles.childName}>{child.name}</ThemedText>
+                <ThemedText style={styles.childAge}>{child.age} years old</ThemedText>
+                <View style={styles.balanceContainer}>
+                  <ThemedText style={styles.balanceLabel}>Total Balance:</ThemedText>
+                  <ThemedText style={styles.balanceValue}>
+                    ${(
+                      child.accounts.spending.balance + 
+                      child.accounts.savings.balance + 
+                      (child.accounts.investing?.balance || 0)
+                    ).toFixed(2)}
+                  </ThemedText>
+                </View>
+              </View>
+            </View>
+            
+            <View style={styles.actionsSection}>
+              <View style={styles.statusIndicator}>
+                <View style={[
+                  styles.statusDot, 
+                  { backgroundColor: child.isActive ? BRAND_COLORS.positive : '#F44336' }
+                ]} />
+                <ThemedText style={styles.statusText}>
+                  {child.isActive ? 'Card Active' : 'Card Inactive'}
+                </ThemedText>
+              </View>
+              
+              <TouchableOpacity 
+                style={[
+                  styles.toggleButton,
+                  { backgroundColor: child.isActive ? '#F44336' : BRAND_COLORS.positive }
+                ]}
+                onPress={() => toggleCardStatus(child.id)}
+              >
+                <ThemedText style={styles.toggleButtonText}>
+                  {child.isActive ? 'Deactivate' : 'Activate'}
                 </ThemedText>
               </TouchableOpacity>
             </View>
+          </TouchableOpacity>
+        ))}
+        
+        {filteredChildren.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="people" size={48} color="#CCCCCC" />
+            <ThemedText style={styles.emptyStateText}>
+              {searchText ? 'No children found' : 'You have no children yet'}
+            </ThemedText>
+            <ThemedText style={styles.emptyStateSubtext}>
+              {searchText ? 'Try a different search term' : 'Add a child to get started'}
+            </ThemedText>
           </View>
-        </View>
-      </Modal>
-
-      {/* Transfer Money Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={transferModalVisible}
-        onRequestClose={() => setTransferModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>Transfer Money</ThemedText>
-              <TouchableOpacity onPress={() => setTransferModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#000000" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalForm}>
-              <View style={styles.inputContainer}>
-                <ThemedText style={styles.label}>Amount ($)</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter amount to transfer"
-                  value={transferAmount}
-                  onChangeText={setTransferAmount}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-
-              <ThemedText style={styles.noteText}>
-                This amount will be transferred from your wallet to your child's account.
-              </ThemedText>
-
-              <TouchableOpacity 
-                style={styles.addChildButtonModal}
-                onPress={transferMoney}
-              >
-                <ThemedText style={styles.addChildButtonText}>Transfer</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -519,321 +234,214 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 40 : 30,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
-  content: {
-    flex: 1,
-    padding: 16,
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  summary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  summaryCard: {
-    alignItems: 'center',
-  },
-  summaryNumber: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: BRAND_COLORS.secondary,
   },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#777777',
+  searchContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    color: '#333',
+  },
+  addButton: {
+    backgroundColor: BRAND_COLORS.secondary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   childrenList: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  childrenListContent: {
-    paddingBottom: 20,
+    paddingTop: 8,
   },
   childCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    position: 'relative',
   },
-  childInfo: {
+  childInfoSection: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    paddingBottom: 12,
   },
-  avatar: {
+  childAvatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   childDetails: {
     flex: 1,
   },
-  nameStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
   childName: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
   },
   childAge: {
     fontSize: 14,
-    color: '#777777',
+    color: '#666',
+    marginBottom: 6,
   },
-  childSchool: {
-    fontSize: 14,
-    color: '#777777',
-    marginTop: 2,
-  },
-  balanceSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 12,
+  balanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   balanceLabel: {
     fontSize: 14,
-    color: '#777777',
-    marginBottom: 4,
+    color: '#666',
+    marginRight: 4,
   },
-  balanceAmount: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  balanceValue: {
+    fontSize: 16,
+    fontWeight: '600',
     color: BRAND_COLORS.secondary,
-    marginBottom: 12,
   },
-  actionButtons: {
+  actionsSection: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  actionButton: {
+  statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginRight: 10,
   },
-  transferButton: {
-    backgroundColor: BRAND_COLORS.secondary,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#666',
   },
   toggleButton: {
-    backgroundColor: BRAND_COLORS.positive,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
-  actionButtonText: {
+  toggleButtonText: {
+    fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '500',
-    fontSize: 14,
-    marginLeft: 4,
-  },
-  removeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    paddingVertical: 48,
   },
   emptyStateText: {
-    fontSize: 16,
-    color: '#777777',
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 24,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
   },
-  emptyStateButton: {
-    backgroundColor: BRAND_COLORS.secondary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  emptyStateButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  stepIndicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  stepIndicator: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeStep: {
-    borderColor: BRAND_COLORS.secondary,
-    backgroundColor: BRAND_COLORS.secondary,
-  },
-  stepNumber: {
+  emptyStateSubtext: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#AAAAAA',
+    color: '#999',
+    marginTop: 4,
   },
-  activeStepNumber: {
-    color: '#FFFFFF',
-  },
-  stepConnector: {
-    height: 2,
-    width: 60,
-    backgroundColor: '#DDDDDD',
-    marginHorizontal: 8,
-  },
-  modalScrollView: {
-    maxHeight: 400,
-  },
-  modalForm: {
+  addChildForm: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    margin: 16,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#555555',
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: BRAND_COLORS.secondary,
+    marginBottom: 16,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    marginBottom: 12,
+    color: '#333',
   },
-  avatarSelectionContainer: {
-    marginBottom: 20,
+  avatarSelection: {
+    marginBottom: 16,
+  },
+  avatarLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
   },
   avatarOptions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 10,
   },
   avatarOption: {
     alignItems: 'center',
-    padding: 10,
+    padding: 8,
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
-  selectedAvatarOption: {
-    borderColor: BRAND_COLORS.secondary,
-    backgroundColor: 'rgba(0, 78, 158, 0.05)',
-  },
-  avatarPreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  avatarLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  noteText: {
-    fontSize: 14,
-    color: '#777777',
-    marginBottom: 20,
-    fontStyle: 'italic',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    padding: 16,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: 14,
-    marginRight: 8,
-    borderRadius: 8,
-    alignItems: 'center',
+  selectedAvatar: {
+    backgroundColor: 'rgba(0, 78, 158, 0.1)',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: BRAND_COLORS.secondary,
   },
-  backButtonText: {
-    color: '#555555',
-    fontWeight: 'bold',
-    fontSize: 16,
+  avatarText: {
+    fontSize: 14,
+    marginTop: 4,
+    color: '#666',
   },
-  nextButton: {
-    flex: 2,
-  },
-  addChildButtonModal: {
+  submitButton: {
     backgroundColor: BRAND_COLORS.secondary,
-    paddingVertical: 14,
     borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
-    flex: 1,
   },
-  addChildButtonText: {
+  submitButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
     fontSize: 16,
-  },
-  addButton: {
-    backgroundColor: BRAND_COLORS.secondary,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
