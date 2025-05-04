@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
 
 // Define brand colors since they're not in the Colors.ts file
@@ -27,21 +27,7 @@ export default function FamilyScreen() {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [transferAmount, setTransferAmount] = useState('');
-  const [allSteps, setAllSteps] = useState<string[]>([
-    'Enroll in FinHero',
-    'Connect with Raiffeisen Account',
-    'Link Child Account',
-    'Add Funds to Wallet',
-    'Activate Card',
-    'Complete Onboarding'
-  ]);
-  const [completedSteps, setCompletedSteps] = useState<string[]>([
-    'Enroll in FinHero',
-    'Connect with Raiffeisen Account',
-    'Link Child Account',
-    'Add Funds to Wallet'
-  ]);
-
+  
   // Filter children based on search text
   const filteredChildren = children.filter((child: Child) => 
     child.name.toLowerCase().includes(searchText.toLowerCase())
@@ -60,7 +46,36 @@ export default function FamilyScreen() {
       return;
     }
 
-    // Add child logic would go here in a real app
+    // Create a new child object
+    const newChild: Child = {
+      id: `c${children.length + 1}`,
+      name: newChildName,
+      age: age,
+      email: `${newChildName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+      phone: '555-000-0000',
+      school: 'School',
+      avatar: newChildAvatar,
+      isActive: false,
+      parentId: 'p1', // Default parent ID
+      xp: 0,
+      completedQuizzes: [],
+      accounts: {
+        spending: {
+          id: `acc${children.length + 1}s`,
+          balance: 0,
+          restrictions: []
+        },
+        savings: {
+          id: `acc${children.length + 1}sv`,
+          balance: 0,
+          goals: []
+        }
+      }
+    };
+
+    // Add the new child to the children array
+    children.push(newChild);
+
     Alert.alert(
       'Success!', 
       `Child ${newChildName} has been added. An invitation has been sent to set up their account.`,
@@ -80,12 +95,17 @@ export default function FamilyScreen() {
 
   // Function to toggle card activation status
   const toggleCardStatus = (childId: string) => {
-    // This would update the database in a real app
-    Alert.alert(
-      'Card Status Updated',
-      'The card status has been updated successfully.',
-      [{ text: 'OK' }]
-    );
+    // Find the child and toggle isActive property
+    const childIndex = children.findIndex(child => child.id === childId);
+    if (childIndex !== -1) {
+      children[childIndex].isActive = !children[childIndex].isActive;
+      
+      Alert.alert(
+        'Card Status Updated',
+        `The card for ${children[childIndex].name} has been ${children[childIndex].isActive ? 'activated' : 'deactivated'}.`,
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   // Function to handle money transfer to child
@@ -98,21 +118,26 @@ export default function FamilyScreen() {
       return;
     }
 
-    // Transfer logic would go here in a real app
-    Alert.alert(
-      'Transfer Successful', 
-      `$${amount.toFixed(2)} has been transferred to ${selectedChild.name}'s account.`,
-      [
-        { 
-          text: 'OK', 
-          onPress: () => {
-            setShowTransferModal(false);
-            setTransferAmount('');
-            setSelectedChild(null);
-          } 
-        }
-      ]
-    );
+    // Find the child and update their spending balance
+    const childIndex = children.findIndex(child => child.id === selectedChild.id);
+    if (childIndex !== -1) {
+      children[childIndex].accounts.spending.balance += amount;
+      
+      Alert.alert(
+        'Transfer Successful', 
+        `$${amount.toFixed(2)} has been transferred to ${selectedChild.name}'s account.`,
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              setShowTransferModal(false);
+              setTransferAmount('');
+              setSelectedChild(null);
+            } 
+          }
+        ]
+      );
+    }
   };
 
   // Open transfer modal for a specific child
@@ -122,15 +147,6 @@ export default function FamilyScreen() {
     setShowTransferModal(true);
   };
 
-  // Get avatar source
-  const getAvatarSource = (avatarType: string) => {
-    if (avatarType === 'girl') {
-      return require('../../assets/images/avatar-girl.png');
-    } else {
-      return require('../../assets/images/avatar-boy.png');
-    }
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -138,50 +154,6 @@ export default function FamilyScreen() {
       {/* Header */}
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>Family Management</ThemedText>
-      </View>
-
-      {/* Onboarding Progress */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Setup Progress</Text>
-          <Text style={styles.progressStats}>{completedSteps.length}/{allSteps.length}</Text>
-        </View>
-        
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              {width: `${(completedSteps.length / allSteps.length) * 100}%`}
-            ]} 
-          />
-        </View>
-
-        <View style={styles.stepsContainer}>
-          {allSteps.map((step, index) => (
-            <View key={index} style={styles.stepItem}>
-              <View 
-                style={[
-                  styles.stepIndicator,
-                  completedSteps.includes(step) && styles.completedStepIndicator
-                ]}
-              >
-                {completedSteps.includes(step) ? (
-                  <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.stepNumber}>{index + 1}</Text>
-                )}
-              </View>
-              <Text 
-                style={[
-                  styles.stepText,
-                  completedSteps.includes(step) && styles.completedStepText
-                ]}
-              >
-                {step}
-              </Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       {/* Search & Add Child Section */}
@@ -233,10 +205,9 @@ export default function FamilyScreen() {
                 style={[styles.avatarOption, newChildAvatar === 'boy' && styles.selectedAvatar]}
                 onPress={() => setNewChildAvatar('boy')}
               >
-                <Image 
-                  source={require('../../assets/images/avatar-boy.png')} 
-                  style={styles.avatarImage} 
-                />
+                <View style={[styles.avatarIconContainer, { backgroundColor: '#B3D1FF', borderWidth: 2, borderColor: '#6FB66B' }]}>
+                  <Ionicons name="person" size={40} color={BRAND_COLORS.secondary} />
+                </View>
                 <ThemedText style={styles.avatarText}>Boy</ThemedText>
               </TouchableOpacity>
               
@@ -244,10 +215,9 @@ export default function FamilyScreen() {
                 style={[styles.avatarOption, newChildAvatar === 'girl' && styles.selectedAvatar]}
                 onPress={() => setNewChildAvatar('girl')}
               >
-                <Image 
-                  source={require('../../assets/images/avatar-girl.png')} 
-                  style={styles.avatarImage} 
-                />
+                <View style={[styles.avatarIconContainer, { backgroundColor: '#FFB6C1', borderWidth: 2, borderColor: '#6FB66B' }]}>
+                  <Ionicons name="person" size={40} color={BRAND_COLORS.secondary} />
+                </View>
                 <ThemedText style={styles.avatarText}>Girl</ThemedText>
               </TouchableOpacity>
             </View>
@@ -274,10 +244,15 @@ export default function FamilyScreen() {
               })}
             >
               <View style={styles.childAvatarContainer}>
-                <Image 
-                  source={getAvatarSource(child.avatar)} 
-                  style={styles.childAvatar}
-                />
+                {child.avatar === 'girl' ? (
+                  <View style={[styles.childAvatarIcon, { backgroundColor: '#FFB6C1', borderWidth: 2, borderColor: '#6FB66B' }]}>
+                    <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
+                  </View>
+                ) : (
+                  <View style={[styles.childAvatarIcon, { backgroundColor: '#B3D1FF', borderWidth: 2, borderColor: '#6FB66B' }]}>
+                    <Ionicons name="person" size={30} color={BRAND_COLORS.secondary} />
+                  </View>
+                )}
               </View>
               
               <View style={styles.childDetails}>
@@ -386,10 +361,15 @@ export default function FamilyScreen() {
               <View style={styles.transferToContainer}>
                 <Text style={styles.transferToLabel}>To:</Text>
                 <View style={styles.transferToChild}>
-                  <Image 
-                    source={getAvatarSource(selectedChild.avatar)} 
-                    style={styles.transferToAvatar} 
-                  />
+                  {selectedChild.avatar === 'girl' ? (
+                    <View style={[styles.transferToAvatarIcon, { backgroundColor: '#FFB6C1', borderWidth: 1, borderColor: '#6FB66B' }]}>
+                      <Ionicons name="person" size={20} color={BRAND_COLORS.secondary} />
+                    </View>
+                  ) : (
+                    <View style={[styles.transferToAvatarIcon, { backgroundColor: '#B3D1FF', borderWidth: 1, borderColor: '#6FB66B' }]}>
+                      <Ionicons name="person" size={20} color={BRAND_COLORS.secondary} />
+                    </View>
+                  )}
                   <Text style={styles.transferToName}>{selectedChild.name}</Text>
                 </View>
               </View>
@@ -474,77 +454,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: BRAND_COLORS.secondary,
   },
-  progressContainer: {
-    margin: 16,
-    marginTop: 8,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  progressStats: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: BRAND_COLORS.secondary,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    marginBottom: 16,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: BRAND_COLORS.positive,
-    borderRadius: 4,
-  },
-  stepsContainer: {
-    marginTop: 8,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  stepIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#E0E0E0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  completedStepIndicator: {
-    backgroundColor: BRAND_COLORS.positive,
-  },
-  stepNumber: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  stepText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  completedStepText: {
-    fontWeight: '500',
-    color: '#333',
-  },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -609,10 +518,13 @@ const styles = StyleSheet.create({
   childAvatarContainer: {
     marginRight: 16,
   },
-  childAvatar: {
+  childAvatarIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   childDetails: {
     flex: 1,
@@ -711,10 +623,13 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
-  avatarImage: {
+  avatarIconContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    display: 'flex',
   },
   selectedAvatar: {
     backgroundColor: 'rgba(0, 78, 158, 0.1)',
@@ -804,10 +719,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  transferToAvatar: {
+  transferToAvatarIcon: {
     width: 30,
     height: 30,
     borderRadius: 15,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 8,
   },
   transferToName: {

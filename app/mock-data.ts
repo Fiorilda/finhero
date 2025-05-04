@@ -328,7 +328,7 @@ export const children: Child[] = [
     accounts: {
       spending: {
         id: 'acc1',
-        balance: 45.75,
+        balance: 7.32,
         restrictions: ['Online Games', 'Streaming Services']
       },
       savings: {
@@ -748,7 +748,7 @@ export const mockInvestments: Investment[] = [
     symbol: 'GOOGL',
     name: 'Alphabet Inc.',
     shares: 0.5,
-    purchasePrice: 120.50,
+    purchasePrice: 7.23,
     currentPrice: 135.80,
     purchaseDate: '2023-08-10',
   },
